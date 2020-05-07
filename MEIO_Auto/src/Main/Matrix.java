@@ -136,17 +136,31 @@ public class Matrix {
     }
 
 
-    public static void printM(double[][] m, int l, int c){
-    int i,j;
-    System.out.println("-------------");
-    for (i=0;i<l;i++) {
-        for (j = 0; j < c; j++) {
-            System.out.print(" " + m[i][j] + " ");
+    public static void printM(double[][] m) {
+        StringBuilder sb = new StringBuilder();
+
+        int N = m.length;
+
+        sb.append("    |");
+        for (int i = 0; i < N; i++) {
+            sb.append(String.format(" %9d |", i));
         }
-    System.out.println();
-    }
+        sb.append("\n");
 
-    System.out.println("-------------");
+        sb.append("____|");
+        for (int i = 0; i < N; i++) {
+            sb.append("___________|");
+        }
+        sb.append("\n");
 
+        for (int i = 0; i < N; i++) {
+            sb.append(String.format("%3d |", i));
+            for (int j = 0; j < N; j++) {
+                sb.append(String.format(" %9.4f |",m[i][j]));
+            }
+            sb.append("\n");
+        }
+
+        System.out.println(sb.toString());
     }
 }

@@ -212,8 +212,8 @@ public class Main {
         Par<double[][], double[][]> m2=a.getmProb_insat();
         //a.calculaSat(11,12);
 
-        Matrix.printM(a.getmCustos().getmCusto0(),13,13);
-        Matrix.printM(a.getmCustos().getmCusto1_f1(),13,13);
+        Matrix.printM(a.getmCustos().getmCusto0());
+        Matrix.printM(a.getmCustos().getmCusto1_f1());
 
        /* Matrix.printM(m.getSecond(),13,13);
         Matrix.printM(m2.getSecond(),13,13);

@@ -35,77 +35,89 @@ public class Main {
     }
 
     //Lucro= Receitas - custos
-    public double calculaLucro(int n_atual,int n_depois,double prob,int estado){
-        int tot_acc=0;
+    public double calculaLucroSat(int n_atual,int n_depois,double prob,int estado){
+        double tot_acc=0;
         for (int i=n_atual;i>=0; i--){
             tot_acc+= (30 * i  *  prob );//calculo de  receitas
         }
         if(n_depois>8){
-            tot_acc -= 10 ;
+            tot_acc -= 10 * prob ;
         }
-        tot_acc-= (estado*7);
+        tot_acc-= (estado*7 * prob );
+        return tot_acc;
+    }
+    public double calculaLucroInsat(int n_atual,int n_depois,double prob,int estado){
+        double tot_acc=0;
+        for (int i=12;i>n_atual; i--){
+            tot_acc+= (30 * n_atual  *  prob );//calculo de  receitas
+        }
+        if(n_depois>8){
+            tot_acc -= (10*prob) ;
+        }
+        tot_acc-= (estado*7*prob);
         return tot_acc;
     }
 
 
 
-   //Calcula uma probabilidade de satizfação dado no numero de carros atual e o numero final.No casos de ficar com 12 carros no final(n_depois), temos de considerar os casos em que já temos 12 carros mas podemos receber E(0..12).
-   //Retorna dois pares, onde o primeiro  tem o custo calculado para todas as matrizes   custo, No segundo par temos as 2 probalilidades calculadas.
-    public  Par<Par<double[], double[]> ,Par<Double, Double>> calculaSat(int n_atual, int n_depois) {
-       double f1_prob = 0;
-       double f2_prob = 0;
-       int estado=0;
-       double []lucro_f1_acc=new double[4];
-       double []lucro_f2_acc=new double[4];
-       int j=0;
-       if (n_depois==12) {
-           while (n_atual >= 0) {
-               j = 0;
-               while (j <= n_atual) {
-                   f1_prob += f1p[j] * f1e[n_depois];
-                   f2_prob += f2p[j] * f2e[n_depois];
-                   //Calcula o  lucro para todos os  estados
-                   for (estado=0;estado<4;estado++) {
-                       lucro_f1_acc[estado]+=calculaLucro(n_atual, n_depois, f1p[j] * f1e[n_depois], estado);
-                       lucro_f1_acc[estado]+=calculaLucro(n_atual, n_depois, f2p[j] * f2e[n_depois], estado);
-                   }
-                   j++;
-               }
-               n_depois--;
-               n_atual--;
-           }
-       }else {
-           while (n_depois >= n_atual && n_atual >= 0) {
-               //System.out.print("P("+n_atual+")"+"*"+"E("+n_depois+")+");
-               f1_prob += f1p[n_atual] * f1e[n_depois];
-               f2_prob += f2p[n_atual] * f2e[n_depois];
-               //Calcula o  lucro para todos os  estados
-               for (estado=0;estado<4;estado++) {
-                   lucro_f1_acc[estado]+=calculaLucro(n_atual, n_depois, f1p[j] * f1e[n_depois], estado);
-                   lucro_f1_acc[estado]+=calculaLucro(n_atual, n_depois, f2p[j] * f2e[n_depois], estado);
-               }
-               n_atual--;
-               n_depois--;
-           }
-           //System.out.println();
-           while (n_atual > n_depois && n_depois >= 0) {
-               //System.out.print("P("+n_atual+")"+"*"+"E("+n_depois+")+");
-               f1_prob += f1p[n_atual] * f1e[n_depois];
-               f2_prob += f2p[n_atual] * f2e[n_depois];
-               //Calcula o  lucro para todos os  estados
-               for (estado=0;estado<4;estado++) {
-                   lucro_f1_acc[estado]+=calculaLucro(n_atual, n_depois, f1p[j] * f1e[n_depois], estado);
-                   lucro_f1_acc[estado]+=calculaLucro(n_atual, n_depois, f2p[j] * f2e[n_depois], estado);
-               }
-               n_atual--;
-               n_depois--;
-           }
-       }
-       //System.out.println();
-       return new Par ( new Par(lucro_f1_acc,lucro_f2_acc),new Par(f1_prob, f2_prob));
-   }
 
-   //Constroi a matriz Satizfação.
+    //Calcula uma probabilidade de satizfação dado no numero de carros atual e o numero final.No casos de ficar com 12 carros no final(n_depois), temos de considerar os casos em que já temos 12 carros mas podemos receber E(0..12).
+    //Retorna dois pares, onde o primeiro  tem o custo calculado para todas as matrizes   custo, No segundo par temos as 2 probalilidades calculadas.
+    public  Par<Par<double[], double[]> ,Par<Double, Double>> calculaSat(int n_atual, int n_depois) {
+        double f1_prob = 0;
+        double f2_prob = 0;
+        int estado=0;
+        double []lucro_f1_acc=new double[4];
+        double []lucro_f2_acc=new double[4];
+        int j=0;
+        if (n_depois==12) {
+            while (n_atual >= 0) {
+                j = 0;
+                while (j <= n_atual) {
+                    f1_prob += f1p[j] * f1e[n_depois];
+                    f2_prob += f2p[j] * f2e[n_depois];
+                    //Calcula o  lucro para todos os  estados
+                    for (estado=0;estado<4;estado++) {
+                        lucro_f1_acc[estado]+=calculaLucroSat(n_atual, n_depois, f1p[j] * f1e[n_depois], estado);
+                        lucro_f2_acc[estado]+=calculaLucroSat(n_atual, n_depois, f2p[j] * f2e[n_depois], estado);
+                    }
+                    j++;
+                }
+                n_depois--;
+                n_atual--;
+            }
+        }else {
+            while (n_depois >= n_atual && n_atual >= 0) {
+                //System.out.print("P("+n_atual+")"+"*"+"E("+n_depois+")+");
+                f1_prob += f1p[n_atual] * f1e[n_depois];
+                f2_prob += f2p[n_atual] * f2e[n_depois];
+                //Calcula o  lucro para todos os  estados
+                for (estado=0;estado<4;estado++) {
+                    lucro_f1_acc[estado]+=calculaLucroSat(n_atual, n_depois, f1p[j] * f1e[n_depois], estado);
+                    lucro_f2_acc[estado]+=calculaLucroSat(n_atual, n_depois, f2p[j] * f2e[n_depois], estado);
+                }
+                n_atual--;
+                n_depois--;
+            }
+            //System.out.println();
+            while (n_atual > n_depois && n_depois >= 0) {
+                //System.out.print("P("+n_atual+")"+"*"+"E("+n_depois+")+");
+                f1_prob += f1p[n_atual] * f1e[n_depois];
+                f2_prob += f2p[n_atual] * f2e[n_depois];
+                //Calcula o  lucro para todos os  estados
+                for (estado=0;estado<4;estado++) {
+                    lucro_f1_acc[estado]+=calculaLucroSat(n_atual, n_depois, f1p[j] * f1e[n_depois], estado);
+                    lucro_f2_acc[estado]+=calculaLucroSat(n_atual, n_depois, f2p[j] * f2e[n_depois], estado);
+                }
+                n_atual--;
+                n_depois--;
+            }
+        }
+        //System.out.println();
+        return new Par ( new Par(lucro_f1_acc,lucro_f2_acc),new Par(f1_prob, f2_prob));
+    }
+
+    //Constroi a matriz Satizfação.
     public  Par<double[][], double[][]> buildMatrixSat(int tam) {
         int i, j;
         double[][] m1 = new double[tam][tam];
@@ -152,8 +164,8 @@ public class Main {
             f1_prob+=f1p[i]*f1e[n_depois];
             f2_prob+=f2p[i]*f2e[n_depois];
             for (estado=0;estado<4;estado++) {
-                lucro_f1_acc[estado]+=calculaLucro(n_atual, n_depois, f1p[i] * f1e[n_depois], estado);
-                lucro_f1_acc[estado]+=calculaLucro(n_atual, n_depois, f2p[i] * f2e[n_depois], estado);
+                lucro_f1_acc[estado]+=calculaLucroInsat(n_atual, n_depois, f1p[i] * f1e[n_depois], estado);
+                lucro_f2_acc[estado]+=calculaLucroInsat(n_atual, n_depois, f2p[i] * f2e[n_depois], estado);
             }
             i++;
         }
@@ -199,6 +211,7 @@ public class Main {
         Par<double[][], double[][]> m=a.getmProb_sat();
         Par<double[][], double[][]> m2=a.getmProb_insat();
         //a.calculaSat(11,12);
+
         Matrix.printM(a.getmCustos().getmCusto0(),13,13);
         Matrix.printM(a.getmCustos().getmCusto1_f1(),13,13);
 
@@ -212,7 +225,7 @@ public class Main {
         for (int i=0;i<13;i++)
             System.out.println(soma[i]);*/
 
-        //double res=a.calculaLucro(1,10,0);
+        //double res=a.calculaLucroSat(1,10,0);
         //System.out.println("1->2:\t"+res);
     }
 

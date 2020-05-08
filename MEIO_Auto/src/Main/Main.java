@@ -203,14 +203,64 @@ public class Main {
     }
 
 
+    //Serve para ca
+    public double[] calcula_Q(double[][]pn,double[][] rn){
+        return Matrix.multiply_by_rows(pn,rn);
+    }
 
+    public double[] calcula_Pn_Fantes(double[][]pn,double[] fn_1){
+        return Matrix.multiply(pn,fn_1);
 
+    }
+    public double[] calcula_Vn(double[]rn,double[] pn_fn_1){
+        int t1=rn.length;
+        int t2=pn_fn_1.length;
+        if(t1!=t2)
+            throw new RuntimeException("Vectors with different sizes!!");
+        double []res=new double[t1];
+        for (int i=0;i<t1;i++){
+            res[i]=rn[i]+pn_fn_1[i];
+        }
+        return res;
+    }
+
+    //Retorna o maior elemento.
+    public double escolhe_Maior(double[] vn){
+        if (vn==null)
+            throw new RuntimeException("NULL Vector on escolhe_Maior");
+        double maior=vn[0];
+        for (int i=1;i<vn.length;i++){
+            if (vn[i]>maior){
+                maior=vn[i];
+            }
+        }
+        return maior;
+    }
+
+    //Retorna o vetor final
+    public double[] solução(double[][] vn){
+        int i,j;
+        if (vn ==null)
+            throw new RuntimeException("Vectors with different sizes!!");
+        int t1=vn.length;
+        double res[]=new double[t1];
+        for(i=0;i<t1;i++){
+             res[i]=escolhe_Maior(vn[i]);
+        }
+        return res;
+    }
+
+    /*public void resolve_N_iteracao(Par<double[][], double[][]> Pb,MatCusto mc,int tam){
+        double []final0 =new double[tam];
+
+    }*/
 
     public static void main(String[] args) {
         Main a =new Main(13);
         Par<double[][], double[][]> m=a.getmProb_sat();
         Par<double[][], double[][]> m2=a.getmProb_insat();
-        //a.calculaSat(11,12);
+
+
 
         Matrix.printM(a.getmCustos().getmCusto0());
         Matrix.printM(a.getmCustos().getmCusto1_f1());

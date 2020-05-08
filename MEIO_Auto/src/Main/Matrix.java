@@ -135,6 +135,16 @@ public class Matrix {
         return y;
     }
 
+    public static double[] multiply_by_rows(double[][] a,double[][] b){
+        int m = a.length;
+        int n = a[0].length;
+        if (b.length != n) throw new RuntimeException("Illegal matrix dimensions.");
+        double[] res = new double[n];
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++)
+                res[i] += a[i][j] * b[i][j];
+        return res;
+    }
 
     public static void printM(double[][] m) {
         StringBuilder sb = new StringBuilder();

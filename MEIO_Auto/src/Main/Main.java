@@ -35,7 +35,7 @@ public class Main {
     }
 
     //Lucro= Receitas - custos
-    public double calculaLucroSat(int n_atual,int n_depois,double prob,int estado){
+   /* public double calculaLucroSat(int n_atual,int n_depois,double prob,int estado){
         double tot_acc=0;
         for (int i=n_atual;i>=0; i--){
             tot_acc+= (30 * i  *  prob );//calculo de  receitas
@@ -43,10 +43,23 @@ public class Main {
         if(n_depois>8){
             tot_acc -= 10 * prob ;
         }
-        tot_acc-= (estado*7 * prob );
+        tot_acc-= (estado * 7 * prob );
+        return tot_acc;
+    }*/
+    public double calculaLucroSat(int n_ped,int n_depois,double prob,int estado){
+        double tot_acc=0;
+
+        tot_acc+= (30 * n_ped *  prob );//calculo de  receitas
+
+        if(n_depois>8){
+            tot_acc -= 10 * prob ;
+        }
+        tot_acc-= (estado * 7 * prob );
         return tot_acc;
     }
-    public double calculaLucroInsat(int n_atual,int n_depois,double prob,int estado){
+
+
+    /*public double calculaLucroInsat(int n_atual,int n_depois,double prob,int estado){
         double tot_acc=0;
         for (int i=12;i>n_atual; i--){
             tot_acc+= (30 * n_atual  *  prob );//calculo de  receitas
@@ -56,14 +69,24 @@ public class Main {
         }
         tot_acc-= (estado*7*prob);
         return tot_acc;
-    }
+    }*/
+    public double calculaLucroInsat(int n_atual,int n_depois,double prob,int estado){
+        double tot_acc=0;
 
+        tot_acc+= (30 * n_atual  *  prob );//calculo de  receitas
+
+        if(n_depois>8){
+            tot_acc -= (10*prob) ;
+        }
+        tot_acc-= (estado*7*prob);
+        return tot_acc;
+    }
 
 
 
     //Calcula uma probabilidade de satizfação dado no numero de carros atual e o numero final.No casos de ficar com 12 carros no final(n_depois), temos de considerar os casos em que já temos 12 carros mas podemos receber E(0..12).
     //Retorna dois pares, onde o primeiro  tem o custo calculado para todas as matrizes   custo, No segundo par temos as 2 probalilidades calculadas.
-    public  Par<Par<double[], double[]> ,Par<Double, Double>> calculaSat(int n_atual, int n_depois) {
+   /* public  Par<Par<double[], double[]> ,Par<Double, Double>> calculaSat(int n_atual, int n_depois) {
         double f1_prob = 0;
         double f2_prob = 0;
         int estado=0;
@@ -115,6 +138,59 @@ public class Main {
         }
         //System.out.println();
         return new Par ( new Par(lucro_f1_acc,lucro_f2_acc),new Par(f1_prob, f2_prob));
+    }*/
+    public  Par<Par<double[], double[]> ,Par<Double, Double>> calculaSat(int n_atual, int n_depois) {
+        double f1_prob = 0;
+        double f2_prob = 0;
+        int estado=0;
+        double []lucro_f1_acc=new double[4];
+        double []lucro_f2_acc=new double[4];
+        int j=0;
+        if (n_depois==12) {
+            while (n_atual >= 0) {
+                j = 0;
+                while (j <= n_atual) {
+                    f1_prob += f1p[j] * f1e[n_depois];
+                    f2_prob += f2p[j] * f2e[n_depois];
+                    //Calcula o  lucro para todos os  estados
+                    for (estado=0;estado<4;estado++) {
+                        lucro_f1_acc[estado]+=calculaLucroSat(j, n_depois, f1p[j] * f1e[n_depois], estado);
+                        lucro_f2_acc[estado]+=calculaLucroSat(j, n_depois, f2p[j] * f2e[n_depois], estado);
+                    }
+                    j++;
+                }
+                n_depois--;
+                n_atual--;
+            }
+        }else {
+            while (n_depois >= n_atual && n_atual >= 0) {
+                //System.out.print("P("+n_atual+")"+"*"+"E("+n_depois+")+");
+                f1_prob += f1p[n_atual] * f1e[n_depois];
+                f2_prob += f2p[n_atual] * f2e[n_depois];
+                //Calcula o  lucro para todos os  estados
+                for (estado=0;estado<4;estado++) {
+                    lucro_f1_acc[estado]+=calculaLucroSat(j, n_depois, f1p[j] * f1e[n_depois], estado);
+                    lucro_f2_acc[estado]+=calculaLucroSat(j, n_depois, f2p[j] * f2e[n_depois], estado);
+                }
+                n_atual--;
+                n_depois--;
+            }
+            //System.out.println();
+            while (n_atual > n_depois && n_depois >= 0) {
+                //System.out.print("P("+n_atual+")"+"*"+"E("+n_depois+")+");
+                f1_prob += f1p[n_atual] * f1e[n_depois];
+                f2_prob += f2p[n_atual] * f2e[n_depois];
+                //Calcula o  lucro para todos os  estados
+                for (estado=0;estado<4;estado++) {
+                    lucro_f1_acc[estado]+=calculaLucroSat(j, n_depois, f1p[j] * f1e[n_depois], estado);
+                    lucro_f2_acc[estado]+=calculaLucroSat(j, n_depois, f2p[j] * f2e[n_depois], estado);
+                }
+                n_atual--;
+                n_depois--;
+            }
+        }
+        //System.out.println();
+        return new Par ( new Par(lucro_f1_acc,lucro_f2_acc),new Par(f1_prob, f2_prob));
     }
 
     //Constroi a matriz Satizfação.
@@ -152,6 +228,28 @@ public class Main {
     }
 
     //Calcula uma probabilidade de insatizfação, dado no numero de carros atual e o numero final.
+ /*   public   Par<Par<double[], double[]> ,Par<Double, Double>> calculaInsat(int n_atual, int n_depois) {
+        double f1_prob = 0;
+        double f2_prob = 0;
+        int i,estado;
+        double []lucro_f1_acc=new double[4];
+        double []lucro_f2_acc=new double[4];
+        i=n_atual+1;
+        while ( i<13 ) {
+            //System.out.print("P("+i+")"+"*"+"E("+n_depois+")+");
+            f1_prob+=f1p[i]*f1e[n_depois];
+            f2_prob+=f2p[i]*f2e[n_depois];
+            for (estado=0;estado<4;estado++) {
+                lucro_f1_acc[estado]+=calculaLucroInsat(n_atual, n_depois, f1p[i] * f1e[n_depois], estado);
+                lucro_f2_acc[estado]+=calculaLucroInsat(n_atual, n_depois, f2p[i] * f2e[n_depois], estado);
+            }
+            i++;
+        }
+        //System.out.print("\t"+f1_prob);
+        //System.out.println();
+
+        return new Par ( new Par(lucro_f1_acc,lucro_f2_acc),new Par(f1_prob, f2_prob));
+    }*/
     public   Par<Par<double[], double[]> ,Par<Double, Double>> calculaInsat(int n_atual, int n_depois) {
         double f1_prob = 0;
         double f2_prob = 0;
@@ -174,6 +272,7 @@ public class Main {
 
         return new Par ( new Par(lucro_f1_acc,lucro_f2_acc),new Par(f1_prob, f2_prob));
     }
+
     //Constroi a matriz Insatizfação.
     public  Par<double[][], double[][]> buildMatrixIns(int tam) {
         int i, j;
@@ -212,14 +311,14 @@ public class Main {
         return Matrix.multiply(pn,fn_1);
 
     }
-    public double[] calcula_Vn(double[]rn,double[] pn_fn_1){
-        int t1=rn.length;
+    public double[] calcula_Vn(double[]qn,double[] pn_fn_1){
+        int t1=qn.length;
         int t2=pn_fn_1.length;
         if(t1!=t2)
             throw new RuntimeException("Vectors with different sizes!!");
         double []res=new double[t1];
         for (int i=0;i<t1;i++){
-            res[i]=rn[i]+pn_fn_1[i];
+            res[i]=qn[i]+pn_fn_1[i];
         }
         return res;
     }
@@ -237,7 +336,7 @@ public class Main {
         return maior;
     }
 
-    //Retorna o vetor final
+    //Retorna o vetor final de forma a maximizar a função objetivo.
     public double[] solução(double[][] vn){
         int i,j;
         if (vn ==null)
@@ -250,33 +349,88 @@ public class Main {
         return res;
     }
 
-    /*public void resolve_N_iteracao(Par<double[][], double[][]> Pb,MatCusto mc,int tam){
-        double []final0 =new double[tam];
+    public double[] add_vect(double[] a, double[] b){
+        if (a==null || b==null)
+            throw new RuntimeException("NULL Vector");
+        int tam=a.length;
+        if (tam!=b.length){
+            throw new RuntimeException("Vectors with different sizes!!");
+        }
+        double []res=new double[tam];
+        for (int i=0;i<tam;i++){
+            res[i]=a[i]+b[i];
+        }
+        return res;
+    }
 
-    }*/
+    public double[] resolve_N_iteracao(double[][] pn1, double[][] pn2,MatCusto mc,int tam,int iteracoes){
+        int i,j;
+        double []fn=new double[13];// Fn inical
+        for (i=0;i<7;i++)
+            fn[i]=0;
+
+        //Vetor Qn
+        double [][] q=new double[7][tam];
+        q[0] = add_vect(calcula_Q(pn1, mc.mCusto0),calcula_Q(pn2, mc.mCusto0) );
+        q[1] = calcula_Q(pn1, mc.mCusto1_f1);
+        q[2] = calcula_Q(pn1, mc.mCusto2_f1);
+        q[3] = calcula_Q(pn1, mc.mCusto3_f1);
+        q[4] = calcula_Q(pn2, mc.mCusto1_f2);
+        q[5] = calcula_Q(pn2, mc.mCusto2_f2);
+        q[6] = calcula_Q(pn2, mc.mCusto3_f2);
+
+
+        for(j=0;j<iteracoes;j++) {
+            //Vetor Vn
+            double vn[][] = new double[13][tam];
+            double []pn_fn_1=Matrix.multiply(pn2, fn);
+            double []pn_fn_2=Matrix.multiply(pn1, fn);
+            for (i = 0; i < 7; i++){
+                if (i==0)
+                    vn[i]=add_vect(calcula_Vn(q[i],pn_fn_1),calcula_Vn(q[i],pn_fn_2 ));
+                else if (i<4)
+                    vn[i]=calcula_Vn(q[i], pn_fn_1);
+                else
+                    vn[i]=calcula_Vn(q[i], pn_fn_2);
+            }
+            fn = solução(vn);
+        }
+        return fn;
+
+    }
+
+
+    public double[][] calculaMatrizTransicao(double[][]f1,double [][]f2){
+        double[][] matrizT=new double[169][169];
+        int i,j,a,b;
+        for(i=0;i<13;i++)
+            for (j = 0; j < 13; j++)
+                for (a = 0; a < 13; a++)
+                    for (b = 0; b < 13; b++)
+                        matrizT[i * 13 + a][j * 13 + b] = f1[i][j] * f2[a][b];
+
+
+        return matrizT;
+
+    }
 
     public static void main(String[] args) {
         Main a =new Main(13);
+        //     F1          F2
         Par<double[][], double[][]> m=a.getmProb_sat();
         Par<double[][], double[][]> m2=a.getmProb_insat();
 
+        //Matrizes probabilidades finais
+        double[][] P1_final=Matrix.add(m.getFirst(),m2.getFirst());
+        double[][] P2_final=Matrix.add(m.getSecond(),m2.getSecond());
+
+        //Matrix.printM(P1_final);
+        //double []sol = a.resolve_N_iteracao(P1_final,P2_final,a.getmCustos(),13,20);
+        //for (int i=0;i<sol.length;i++){
+        //    System.out.println("sol["+i+"]="+sol[i]);
+        //}
 
 
-        Matrix.printM(a.getmCustos().getmCusto0());
-        Matrix.printM(a.getmCustos().getmCusto1_f1());
-
-       /* Matrix.printM(m.getSecond(),13,13);
-        Matrix.printM(m2.getSecond(),13,13);
-        double[][] fin=Matrix.add(m.getFirst(),m2.getFirst());
-        double[] soma=Matrix.sumRows(fin,13,13);
-        //atrix.printM(m.getFirst(),13,13);
-        //double[] soma=Matrix.sumRows(m.getFirst(),13,13);
-        //double[] soma2=Matrix.sumRows(m2.getFirst(),13,13);
-        for (int i=0;i<13;i++)
-            System.out.println(soma[i]);*/
-
-        //double res=a.calculaLucroSat(1,10,0);
-        //System.out.println("1->2:\t"+res);
     }
 
 }

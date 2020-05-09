@@ -36,18 +36,6 @@ public class Main {
         return mCustos;
     }
 
-    //Lucro= Receitas - custos
-   /* public double calculaLucroSat(int n_atual,int n_depois,double prob,int estado){
-        double tot_acc=0;
-        for (int i=n_atual;i>=0; i--){
-            tot_acc+= (30 * i  *  prob );//calculo de  receitas
-        }
-        if(n_depois>8){
-            tot_acc -= 10 * prob ;
-        }
-        tot_acc-= (estado * 7 * prob );
-        return tot_acc;
-    }*/
     public double calculaLucroSat(int n_ped,int n_depois,double prob,int estado){
         double tot_acc=0;
 
@@ -64,18 +52,6 @@ public class Main {
         return tot_acc;
     }
 
-
-    /*public double calculaLucroInsat(int n_atual,int n_depois,double prob,int estado){
-        double tot_acc=0;
-        for (int i=12;i>n_atual; i--){
-            tot_acc+= (30 * n_atual  *  prob );//calculo de  receitas
-        }
-        if(n_depois>8){
-            tot_acc -= (10*prob) ;
-        }
-        tot_acc-= (estado*7*prob);
-        return tot_acc;
-    }*/
     public double calculaLucroInsat(int n_atual,int n_depois,double prob,int estado){
         double tot_acc=0;
 
@@ -84,11 +60,11 @@ public class Main {
         if(n_depois>8){
             tot_acc -= (10*prob) ;
         }
-        tot_acc-= (estado*7*prob);
+        if (estado > 0) {
+            tot_acc-= (estado*7*prob);
+        }
         return tot_acc;
     }
-
-
 
     //Calcula uma probabilidade de satizfação dado no numero de carros atual e o numero final.No casos de ficar com 12 carros no final(n_depois), temos de considerar os casos em que já temos 12 carros mas podemos receber E(0..12).
     //Retorna dois pares, onde o primeiro  tem o custo calculado para todas as matrizes   custo, No segundo par temos as 2 probalilidades calculadas.
@@ -378,25 +354,47 @@ public class Main {
         return new Par ( new Par(lucro_f1_acc,lucro_f2_acc),new Par(f1_prob, f2_prob));
     }*/
     public   Par<Par<double[], double[]> ,Par<Double, Double>> calculaInsat(int n_atual, int n_depois) {
-        double []f1_prob;
-        double []f2_prob;
-        int i,estado;
-        double []lucro_f1_acc=new double[4];
-        double []lucro_f2_acc=new double[4];
-        i=n_atual+1;
-        
-        while ( i<13 ) {
-            //System.out.print("P("+i+")"+"*"+"E("+n_depois+")+");
-            f1_prob+=f1p[i]*f1e[n_depois];
-            f2_prob+=f2p[i]*f2e[n_depois];
-            for (estado=0;estado<4;estado++) {
-                lucro_f1_acc[estado]+=calculaLucroInsat(n_atual, n_depois, f1p[i] * f1e[n_depois], estado);
-                lucro_f2_acc[estado]+=calculaLucroInsat(n_atual, n_depois, f2p[i] * f2e[n_depois], estado);
+        double []f1_prob = new double[7];
+        double []f2_prob = new double[7];
+        double []lucro_f1_acc=new double[7];
+        double []lucro_f2_acc=new double[7];
+
+        /*
+        Estado == 0 -> P(4 - 1) -> (P,E) == (4,0) || (5,0) || ... || (12,0)
+                                            (5,1) || (6,1) || ... || (12,1)
+
+        Entregar 1 carro == Estado -1 -> P(4 - 1) -> (P,E) == (3,0) || (4,0) || ... || (12,0)
+                                                              (4,1) || (5,1) || ... || (12,1)
+                                                              (5,2) || (6,2) || ... || (12,2)
+
+        Entregar 2 carro == Estado -2 -> P(4 - 1) -> (P,E) == (2,0) || (3,0) || ... || (12,0)
+                                                              (3,1) || (4,1) || ... || (12,1)
+                                                              (4,2) || (5,2) || ... || (12,2)
+                                                              (5,3) || (6,3) || ... || (12,3)
+
+        Receber 2 carros == Estado 2 -> P(4-1) Impossível == 0
+
+        Estado 0 -> P(8-6) => (P,E) == (3,0) || (4,0) || ... || (12,0)
+                                       (4,1) || ... || (12,1)
+                                       ...
+                                       (8,5) || (9,5) || ... || (12,5)
+                                       (9,6) || ... || (12,6)
+
+        Receber 2 carros == Estado 2 -> P(8-6) => (5,0) || (6,0) || ... || (12,0)
+                                                  (6,1) || ... || (12,1)
+                                                  (7,2) || ... || (12,2)
+                                                  (8,3) || ... || (12,3)
+                                                  (9,4) || ... || (12,4)
+        */
+        for (int estado = -3; estado <= 3; estado++) {
+            for (int i = n_atual + 1; i < 13; i++) {
+                f1_prob[estado + 3] += f1p[i]*f1e[n_depois];
+                f2_prob[estado + 3] += f2p[i]*f2e[n_depois];
+
+                lucro_f1_acc[estado] += calculaLucroInsat(n_atual, n_depois, f1p[i] * f1e[n_depois], estado);
+                lucro_f2_acc[estado] += calculaLucroInsat(n_atual, n_depois, f2p[i] * f2e[n_depois], estado);
             }
-            i++;
         }
-        //System.out.print("\t"+f1_prob);
-        //System.out.println();
 
         return new Par ( new Par(lucro_f1_acc,lucro_f2_acc),new Par(f1_prob, f2_prob));
     }

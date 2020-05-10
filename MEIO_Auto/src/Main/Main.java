@@ -16,8 +16,8 @@ public class Main {
     Par<double[][], double[][]>  mProb_sat;
     Par<double[][], double[][]>  mProb_insat;
 
-    Par<double[][][], double[][][]>  probSat;
-    Par<double[][][], double[][][]>  probInsat;
+    Par<Par<double[][][], double[][][]>, Par<double[][][], double[][][]>>  probSat;
+    Par<Par<double[][][], double[][][]>, Par<double[][][], double[][][]>>  probInsat;
 
 
     MatCusto mCustos;
@@ -28,33 +28,86 @@ public class Main {
         probSat = buildMatrixSat(tam);
         probInsat = buildMatrixIns(tam);
 
-        double[][][] m1S = probSat.getFirst();
-        double[][][] m1I = probInsat.getFirst();
+        double[][][] m1S = probSat.getFirst().getFirst();
+        double[][][] m1I = probInsat.getFirst().getFirst();
+        double[][][] m2S = probSat.getFirst().getSecond();
+        double[][][] m2I = probInsat.getFirst().getSecond();
+
+        double[][][] l1S = probSat.getSecond().getFirst();
+        double[][][] l1I = probInsat.getSecond().getFirst();
+        double[][][] l2S = probSat.getSecond().getSecond();
+        double[][][] l2I = probInsat.getSecond().getSecond();
 
 
-        double[][][] result = new double[7][13][13];
+        double[][][] result1 = new double[7][13][13];
+        double[][][] result2 = new double[7][13][13];
+
+        double[][][] lucro1 = new double[7][13][13];
+        double[][][] lucro2 = new double[7][13][13];
+
         for (int i = 0; i < 7; i++) {
-            result[i] = Matrix.add(m1S[i], m1I[i]);
+            result1[i] = Matrix.add(m1S[i], m1I[i]);
+            result2[i] = Matrix.add(m2S[i], m2I[i]);
 
+            lucro1[i] = Matrix.add(l1S[i], l1I[i]);
+            lucro2[i] = Matrix.add(l2S[i], l2I[i]);
+
+            /*
             System.out.println("Estado " + (i - 3));
+            */
+
+            /*
             System.out.println("Satisfeito");
             Matrix.printM(m1S[i]);
 
             System.out.println("Insatisfeito");
             Matrix.printM(m1I[i]);
+            */
 
+            // Matrix.printM(result1[i]);
 
-            Matrix.printM(result[i]);
-
+            /*
             int indice = 0;
-            for (double[] lista : result[i]) {
+            for (double[] lista : result1[i]) {
                 System.out.println("Linha " + indice + " " + Arrays.stream(lista).sum());
                 indice++;
             }
             System.out.println();
-
+            */
         }
 
+        double [][]matEstato3 = calculaMatrizEstadosv2(-3, result1[3]);
+        double [][]matLucro3 = calculaMatrizLucrosv2(3, lucro1[3]);
+
+        System.out.println("Lucro para Estado 0");
+        Matrix.printM(lucro1[3]);
+
+        System.out.println("Lucro para Estado 3");
+        Matrix.printM(matLucro3);
+
+
+        System.out.println("Estado 0");
+        Matrix.printM(result1[3]);
+
+        System.out.println("Estado -3 deles");
+        Matrix.printM(matEstato3);
+
+        System.out.println("Estado -3 nosso");
+        Matrix.printM(result1[0]);
+        /*
+        double[][][] bigMatrix;
+        bigMatrix = Matrix.createBig(result1, result2);
+
+        for (int i = 0; i < 7; i++) {
+            System.out.println("Estado " + (i - 3));
+            Matrix.printM(bigMatrix[i]);
+
+            for (int i = 0; i < 169; i++) {
+                double sum = Arrays.stream(bigMatrix[3][i]).sum();
+                System.out.println("Linha " + i + " = " + sum);
+            }
+        }
+        */
     }
 
     public Par<double[][], double[][]> getmProb_sat (){
@@ -71,14 +124,11 @@ public class Main {
     public double calculaLucroSat(int n_ped,int n_depois,double prob,int estado){
         double tot_acc=0;
 
+        prob = 1;
         tot_acc+= (30 * n_ped *  prob );//calculo de  receitas
 
         if(n_depois>8){
             tot_acc -= 10 * prob ;
-        }
-
-        if( estado > 0) {
-            tot_acc-= (estado * 7 * prob );
         }
 
         return tot_acc;
@@ -87,6 +137,8 @@ public class Main {
     public double calculaLucroInsat(int n_atual,int n_depois,double prob,int estado){
         double tot_acc=0;
 
+        prob = 1;
+
         if (estado >= 0) {
             tot_acc += (30 * (n_atual - estado)  *  prob );//calculo de  receitas
         } else {
@@ -94,11 +146,9 @@ public class Main {
         }
 
         if(n_depois>8){
-            tot_acc -= (10*prob) ;
+            tot_acc -= (10 * prob) ;
         }
-        if (estado > 0) {
-            tot_acc-= (estado*7*prob);
-        }
+
         return tot_acc;
     }
 
@@ -164,26 +214,6 @@ public class Main {
         double []lucro_f1_acc = new double[7];
         double []lucro_f2_acc = new double[7];
 
-        /*
-        if (n_depois==12) {
-            while (n_atual >= 0) {
-                j = 0;
-                while (j <= n_atual) {
-                    f1_prob += f1p[j] * f1e[n_depois];
-                    f2_prob += f2p[j] * f2e[n_depois];
-                    //Calcula o  lucro para todos os  estados
-                    for (estado=0;estado<4;estado++) {
-                        lucro_f1_acc[estado]+=calculaLucroSat(j, n_depois, f1p[j] * f1e[n_depois], estado);
-                        lucro_f2_acc[estado]+=calculaLucroSat(j, n_depois, f2p[j] * f2e[n_depois], estado);
-                    }
-                    j++;
-                }
-                n_depois--;
-                n_atual--;
-            }
-        }
-
- */
         /*
             Estado 0
             Começo com 12 e acabo com 12
@@ -372,17 +402,17 @@ public class Main {
     }
 
     //Constroi a matriz Satizfação.
-    public  Par<double[][][], double[][][]> buildMatrixSat(int tam) {
+    public  Par<Par<double[][][], double[][][]>,Par<double[][][], double[][][]>> buildMatrixSat(int tam) {
         int i, j;
         double[][][] m1 = new double[7][tam][tam];
         double[][][] m2 = new double[7][tam][tam];
 
-        //m1 = Matrix.init(tam, 0);
-        //m2 = Matrix.init(tam, 0);
+        double[][][] l1 = new double[7][tam][tam];
+        double[][][] l2 = new double[7][tam][tam];
 
-
-        //este par tem aqui as probabilidades
+        // Este par tem aqui as probabilidades
         Par<Par<double[], double[]>,Par<double[], double[]> > Custos_probs;
+
 
         for (i = 0; i < tam; i++) {
             for (j = 0; j < tam; j++) {
@@ -392,13 +422,18 @@ public class Main {
                 double[] probs1 = Custos_probs.getSecond().getFirst();
                 double[] probs2 = Custos_probs.getSecond().getSecond();
 
+                double[] lucro1 = Custos_probs.getFirst().getFirst();
+                double[] lucro2 = Custos_probs.getFirst().getSecond();
+
                 for (int estado = -3; estado < 4; estado++) {
                     m1[estado + 3][i][j] = probs1[estado + 3];
                     m2[estado + 3][i][j] = probs2[estado + 3];
+                    l1[estado + 3][i][j] = lucro1[estado + 3];
+                    l2[estado + 3][i][j] = lucro2[estado + 3];
                 }
 
                     /*
-                    //Matiz de custos;
+                    //Matriz de custos;
                     double[] valC_f1=Custos_probs.getFirst().getFirst();
                     double[] valC_f2=Custos_probs.getFirst().getSecond();
                     this.mCustos.inc0(valC_f1[0]+valC_f2[0],i,j);
@@ -409,59 +444,67 @@ public class Main {
                     this.mCustos.inc22(valC_f2[2],i,j);
                     this.mCustos.inc23(valC_f2[3],i,j);
                     */
-
             }
         }
-        return new Par(m1, m2);
+        return new Par( new Par(m1, m2), new Par(l1,l2));
     }
 
-    //Calcula uma probabilidade de insatizfação, dado no numero de carros atual e o numero final.
- /*   public   Par<Par<double[], double[]> ,Par<Double, Double>> calculaInsat(int n_atual, int n_depois) {
-        double f1_prob = 0;
-        double f2_prob = 0;
-        int i,estado;
-        double []lucro_f1_acc=new double[4];
-        double []lucro_f2_acc=new double[4];
-        i=n_atual+1;
-        while ( i<13 ) {
-            //System.out.print("P("+i+")"+"*"+"E("+n_depois+")+");
-            f1_prob+=f1p[i]*f1e[n_depois];
-            f2_prob+=f2p[i]*f2e[n_depois];
-            for (estado=0;estado<4;estado++) {
-                lucro_f1_acc[estado]+=calculaLucroInsat(n_atual, n_depois, f1p[i] * f1e[n_depois], estado);
-                lucro_f2_acc[estado]+=calculaLucroInsat(n_atual, n_depois, f2p[i] * f2e[n_depois], estado);
-            }
-            i++;
-        }
-        //System.out.print("\t"+f1_prob);
-        //System.out.println();
+    public double[][] calculaMatrizLucrosv2(int trans, double[][] mat0) {
+        double[][] result = new double[mat0.length][mat0[0].length];
 
-        return new Par ( new Par(lucro_f1_acc,lucro_f2_acc),new Par(f1_prob, f2_prob));
-    }*/
-/*
-    public   Par<Par<double[], double[]> ,Par<Double, Double>> calculaInsat(int n_atual, int n_depois) {
-        double f1_prob = 0;
-        double f2_prob = 0;
-        int i,estado;
-        double []lucro_f1_acc=new double[4];
-        double []lucro_f2_acc=new double[4];
-        i=n_atual+1;
-        while ( i<13 ) {
-            System.out.print("P("+i+")"+"*"+"E("+n_depois+")+");
-            f1_prob+=f1p[i]*f1e[n_depois];
-            f2_prob+=f2p[i]*f2e[n_depois];
-            for (estado=0;estado<4;estado++) {
-                lucro_f1_acc[estado]+=calculaLucroInsat(n_atual, n_depois, f1p[i] * f1e[n_depois], estado);
-                lucro_f2_acc[estado]+=calculaLucroInsat(n_atual, n_depois, f2p[i] * f2e[n_depois], estado);
-            }
-            i++;
-        }
-        //System.out.print("\t"+f1_prob);
-        //System.out.println();
+        for (int i = - trans, realI = 0; i < mat0.length - trans; i++, realI++) { // Cursor linhas Matriz inicial
+            for (int j = 0; j < mat0[0].length; j++) { // Cursor colunas Matriz inicial
 
-        return new Par ( new Par(lucro_f1_acc,lucro_f2_acc),new Par(f1_prob, f2_prob));
+                if (i < 0) {
+                    result[i + 13][j] = -1000;
+                    continue;
+                }
+                if (i > mat0.length - 1){
+                    result[i - 13][j] = -1000;
+                    continue;
+                }
+
+                result[i][j] += mat0[realI][j];
+
+
+                if (trans < 0) result[i][j] += trans * 7;
+            }
+        }
+
+        return result;
     }
- */
+
+    public double[][] calculaMatrizEstadosv2(int trans, double[][] mat0) {
+        double[][] result = new double[mat0.length][mat0[0].length];
+
+        for (int i = -trans, realI = 0; i < mat0.length - trans; i++, realI++) { // Cursor linhas Matriz inicial
+            for (int j = 0; j < mat0[0].length; j++) { // Cursor colunas Matriz inicial
+
+                if (i < 0) continue;
+                if (i > mat0.length - 1) continue;
+
+                result[i][j] = mat0[realI][j];
+            }
+        }
+
+        return result;
+    }
+
+    public double[][] calculaMatrizEstadosv1(int estado, double[][] mat0) {
+        double[][] result = new double[mat0.length][mat0[0].length];
+
+        for (int i = estado, realI = 0; i < mat0.length + estado; i++, realI++) { // Cursor linhas Matriz inicial
+            for (int j = 0; j < mat0[0].length; j++) { // Cursor colunas Matriz inicial
+
+                if (i < 0) continue;
+                if (i > mat0.length - 1) continue;
+
+                result[i][j] = mat0[realI][j];
+            }
+        }
+
+        return result;
+    }
 
     public   Par<Par<double[], double[]> ,Par<double[], double[]>> calculaInsat(int n_atual, int n_depois) {
         double []f1_prob = new double[7];
@@ -479,6 +522,9 @@ public class Main {
                     f1_prob[estado + 3] += f1p[i]*f1e[n_depois-estado];
                     f2_prob[estado + 3] += f2p[i]*f2e[n_depois-estado];
                     sb.append(i +" pedidos e " + (n_depois-estado) + " entregas\n");
+
+                    lucro_f1_acc[estado + 3] += calculaLucroInsat(n_atual, n_depois, (f1p[i]*f1e[n_depois-estado]),estado);
+                    lucro_f2_acc[estado + 3] += calculaLucroInsat(n_atual, n_depois, (f2p[i]*f2e[n_depois-estado]),estado);
                 }
             }
         }
@@ -491,33 +537,36 @@ public class Main {
         return new Par ( new Par(lucro_f1_acc,lucro_f2_acc),new Par(f1_prob, f2_prob));
     }
 
-
-
     //Constroi a matriz Insatizfação.
-    public  Par<double[][][], double[][][]> buildMatrixIns(int tam) {
+    public  Par<Par<double[][][], double[][][]>,Par<double[][][], double[][][]>> buildMatrixIns(int tam) {
         int i, j;
-            double[][][] m1 = new double[7][tam][tam];
-            double[][][] m2 = new double[7][tam][tam];
+        double[][][] m1 = new double[7][tam][tam];
+        double[][][] m2 = new double[7][tam][tam];
 
-            //m1 = Matrix.init(tam, 0);
-            //m2 = Matrix.init(tam, 0);
+        double[][][] l1 = new double[7][tam][tam];
+        double[][][] l2 = new double[7][tam][tam];
+        //m1 = Matrix.init(tam, 0);
+        //m2 = Matrix.init(tam, 0);
 
+        //este par tem aqui as probabilidades
+        Par<Par<double[], double[]>,Par<double[], double[]> > Custos_probs;
 
-            //este par tem aqui as probabilidades
-            Par<Par<double[], double[]>,Par<double[], double[]> > Custos_probs;
+        for (i = 0; i < tam; i++) {
+            for (j = 0; j < tam; j++) {
+                Custos_probs = calculaInsat(i, j);
 
-            for (i = 0; i < tam; i++) {
-                for (j = 0; j < tam; j++) {
-                    Custos_probs = calculaInsat(i, j);
+                // Matriz
+                double[] probs1 = Custos_probs.getSecond().getFirst();
+                double[] probs2 = Custos_probs.getSecond().getSecond();
+                double[] lucro1 = Custos_probs.getFirst().getFirst();
+                double[] lucro2 = Custos_probs.getFirst().getSecond();
 
-                    // Matriz
-                    double[] probs1 = Custos_probs.getSecond().getFirst();
-                    double[] probs2 = Custos_probs.getSecond().getSecond();
-
-                    for (int estado = -3; estado < 4; estado++) {
-                        m1[estado + 3][i][j] = probs1[estado + 3];
-                        m2[estado + 3][i][j] = probs2[estado + 3];
-                    }
+                for (int estado = -3; estado < 4; estado++) {
+                    m1[estado + 3][i][j] = probs1[estado + 3];
+                    m2[estado + 3][i][j] = probs2[estado + 3];
+                    l1[estado + 3][i][j] = lucro1[estado + 3];
+                    l2[estado + 3][i][j] = lucro2[estado + 3];
+                }
                     /*
                     //Matiz de custos;
                     double[] valC_f1=Custos_probs.getFirst().getFirst();
@@ -530,12 +579,11 @@ public class Main {
                     this.mCustos.inc22(valC_f2[2],i,j);
                     this.mCustos.inc23(valC_f2[3],i,j);
                     */
-                }
             }
+        }
 
-        return new Par(m1, m2);
+        return new Par( new Par(m1, m2), new Par(l1,l2));
     }
-
 
     //Serve para ca
     public double[] calcula_Q(double[][]pn,double[][] rn){
@@ -546,6 +594,7 @@ public class Main {
         return Matrix.multiply(pn,fn_1);
 
     }
+
     public double[] calcula_Vn(double[]qn,double[] pn_fn_1){
         int t1=qn.length;
         int t2=pn_fn_1.length;
@@ -633,7 +682,6 @@ public class Main {
         return fn;
 
     }
-
 
     public double[][] calculaMatrizTransicao(double[][]f1,double [][]f2){
         double[][] matrizT=new double[169][169];

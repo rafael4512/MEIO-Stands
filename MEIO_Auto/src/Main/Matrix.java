@@ -147,6 +147,31 @@ public class Matrix {
         return res;
     }
 
+    public static double[][][] createBig(double[][][] f1, double[][][] f2) {
+        double [][][]result;
+        int a = f1.length; // Num estados
+        int b = f1[0].length; // Linhas
+        int c = f1[0][0].length; // Colunas
+        int d = f2[0].length; // Linhas
+        int e = f2[0][0].length; // Colunas
+
+        result = new double[a * a][b * d][c * e];
+
+        for (int estado = 0; estado < a; estado++) {
+            for (int i = 0; i < b; i++) {
+                for (int j = 0; j < c; j++) {
+                    for (int k = 0; k < d; k++) {
+                        for (int l = 0; l < e; l++) {
+                            result[estado][i * 13 + k][j * 13 + l] = f1[estado][i][j] * f2[a - 1 - estado][k][l];
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
     public static void printM(double[][] m) {
         StringBuilder sb = new StringBuilder();
 
@@ -154,20 +179,20 @@ public class Matrix {
 
         sb.append("    |");
         for (int i = 0; i < N; i++) {
-            sb.append(String.format(" %9d |", i));
+            sb.append(String.format(" %10d |", i));
         }
         sb.append("\n");
 
         sb.append("____|");
         for (int i = 0; i < N; i++) {
-            sb.append("___________|");
+            sb.append("____________|");
         }
         sb.append("\n");
 
         for (int i = 0; i < N; i++) {
             sb.append(String.format("%3d |", i));
             for (int j = 0; j < N; j++) {
-                sb.append(String.format(" %9.4f |",m[i][j]));
+                sb.append(String.format(" %10.4f |",m[i][j]));
             }
             sb.append("\n");
         }

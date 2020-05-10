@@ -4,11 +4,11 @@ import java.util.Arrays;
 
 public class Main {
 
-    //FILIAL1- Pobabilidade de entregas e pedidos
+    //FILIAL1- Probabilidade de entregas e pedidos
     private static double[] f1p = {0.0272, 0.0944, 0.1552, 0.2092, 0.1932, 0.1476, 0.0864, 0.0528, 0.0208, 0.0088, 0.0032, 0.0012, 0.0000};
     private static double[] f1e = {0.0404, 0.0676, 0.1024, 0.1392, 0.1396, 0.1236, 0.1012, 0.0896, 0.0740, 0.0572, 0.0388, 0.0220, 0.0044};
 
-    //FILIAL2 -Pobabilidade de entregas e pedidos
+    //FILIAL2 - Probabilidade de entregas e pedidos
     private static double[] f2p = {0.0292, 0.0724, 0.1168, 0.1488, 0.1452, 0.1116, 0.0968, 0.0824, 0.0736, 0.0508, 0.0376, 0.0268, 0.0080};
     private static double[] f2e = {0.0280, 0.1024, 0.1848, 0.2216, 0.1964, 0.1324, 0.0740, 0.0360, 0.0144, 0.0064, 0.0016, 0.0008, 0.0012};
 
@@ -28,10 +28,10 @@ public class Main {
         probSat = buildMatrixSat(tam);
         probInsat = buildMatrixIns(tam);
 
-        double[][][] m1S = probSat.getSecond();
-        double[][][] m1I = probInsat.getSecond();
+        double[][][] m1S = probSat.getFirst();
+        double[][][] m1I = probInsat.getFirst();
 
-        /*
+
         double[][][] result = new double[7][13][13];
         for (int i = 0; i < 7; i++) {
             result[i] = Matrix.add(m1S[i], m1I[i]);
@@ -43,17 +43,17 @@ public class Main {
             System.out.println("Insatisfeito");
             Matrix.printM(m1I[i]);
 
+
             Matrix.printM(result[i]);
 
             int indice = 0;
             for (double[] lista : result[i]) {
-                System.out.println("Estado " + indice + " " + Arrays.stream(lista).sum());
+                System.out.println("Linha " + indice + " " + Arrays.stream(lista).sum());
                 indice++;
             }
             System.out.println();
-        }
 
-         */
+        }
 
     }
 
@@ -204,22 +204,55 @@ public class Main {
                 // Basicamente tentas ficar com 0, mas recebes pelo menos 1 carro
                 //System.out.println("E = " + estado + " e P(" + n_atual + " -> " + n_depois + ") e falha em 2");
                 continue;
-            } else if (n_atual < -estado) {
-                //System.out.println("E = " + estado + " e P(" + n_atual + " -> " + n_depois + ") e falha em 3");
-                continue;
             } else if (estado >= 0 && n_depois == 12) {
-                for (int i = n_atual, f = n_depois; i >= 0 && f >= 0 ; i--, f--) { // Entregas
-                    for (int j = 0; j - estado <= i && j < 13; j++) { // Pedidos
+                for (int i = n_atual; i >= 0; i--) { // Pedidos
+                    for (int j = (n_depois - n_atual + i - estado >= 0) ? n_depois - n_atual + i - estado : 0 ; j <= 12; j++) { // Entregas
+                        // System.out.println("Estado = " + estado + " Atual = " + n_atual + " e pedidos = " + i + " e entregas = " + j);
                         // Transferir estado carros => 12 + estado
-                        f1_prob[estado + 3] += f1p[j] * f1e[f];
+                        f1_prob[estado + 3] += f1p[i] * f1e[j];
                         // Filial 2, será que está correto?
-                        f2_prob[estado + 3] += f2p[j] * f2e[f];
+                        f2_prob[estado + 3] += f2p[i] * f2e[j];
 
                         //Calcula o  lucro para todos os  estados
-                        lucro_f1_acc[estado + 3] += calculaLucroSat(j, n_depois, f1p[j] * f1e[f], estado);
-                        lucro_f2_acc[estado + 3] += calculaLucroSat(j, n_depois, f2p[j] * f2e[f], estado);
+                        lucro_f1_acc[estado + 3] += calculaLucroSat(i, n_depois, f1p[i] * f1e[j], estado);
+                        lucro_f2_acc[estado + 3] += calculaLucroSat(i, n_depois, f2p[i] * f2e[j], estado);
+                        /*
+                    for (int j = n_depois - estado; j < 13; j++) { // Entregas
+                            P(0->12) = Estado 0 = (P,E) -> (0,12)
+                            P(0->12) = Estado 1 = (P,E) -> (0,11) || (0,12)
 
-                        //System.out.println("E = " + estado + " e P(" + n_atual + " -> " + n_depois + ") com " + i + " pedidos e " + f + " entregas");
+                            i = 0 & f = 12
+                            j = 0 .. j <= 1
+
+                            P(1->12) = Estado 0 = (P,E) -> (1,12)
+                                                           (0,11) || (0,12)
+
+                            P(1->12) = Estado 1 = (P,E) -> (1,11) || (1,12)
+                                                           (0,10) || (0,11) || (0,12)
+
+                            i = 1 -> j = 12 .. 11
+                            i = 0 -> j = 12 .. 10
+
+                            P(2->12) = Estado 0 = (P,E) -> (2,12)
+                                                           (1,11) || (1,12)
+                                                           (0,10) || (0,11) || (0,12)
+
+                            P(2->12) = Estado 1 = (P,E) -> (2,11) || (2,12)
+                                                           (1,10) || (1,11) || (1,12)
+                                                           (0,9) || (0,10) || (0,11) || (0,12)
+
+                            P(10->12) = Estado 0 = (P,E) -> (10,12)
+                                                            (9,11) || (9,12)
+                                                            ...
+                                                            (0,2) || ... || (0,12)
+
+                            P(10->12) = Estado 3 = (P,E) -> (10,9) || (10,10) || (10,11) || (10,12)
+                                                            (9,8) || (9,9) ...
+                                                            ...
+                                                            (1,0) || (1,1) ...
+                                                            (0,0) || ... || (0,12)
+                        */
+                            //System.out.println("E = " + estado + " e P(" + n_atual + " -> " + n_depois + ") com " + i + " pedidos e " + f + " entregas");
                     }
                 }
             } else if (estado >= 0 && n_depois >= n_atual) {
@@ -260,12 +293,13 @@ public class Main {
                     Tens mais do que tinhas e recebe carros
                     P(12 -> 11) => (E,P) (0,1) || (1,2) || (2,3) || ... || (11,12)
 
-                    Estado == 1 -> P(12 -> 11) => (E,P) (0,0) || (1,1) || ... || (12,12)
-                                                        (1,0) || (2,1) || ... || (12,11)
-                                                        (2,0) || ...
-                                                        ...
-                                                        (11,0) || (11,1)
-                                                        (12,0)
+                    Estado == -1 -> P(12 -> 11) => (E,P) (0,0) || (1,1) || ... || (12,12)
+                                                         (1,0) || (2,1) || ... || (12,11)
+                                                         (2,0) || ...
+                                                         ...
+                                                         (11,0) || (11,1)
+                                                         (12,0)
+
                     i = 3, f = 2 Entregas
                     j = 0, j <= 2 Pedidos
                     (E,P) = (2,0), (2,1), (2,2)
@@ -290,6 +324,18 @@ public class Main {
                 }
             } else if (estado < 0 && n_depois >= n_atual) {
             /*
+                P(0 -> 0) => (P,E) (0,0)
+
+                Estado == -1 -> P(0 -> 0) => (P,E) (0,1)
+                // Os insatisfeitos tem de acumular em (0,0) a antiga P(0,0)
+                ***Insastisfeitos***
+                P(0 -> 0) => (P,E) (12,0) || ... || (1,0)
+
+                Estado == -1 -> P(0 -> 0) => (P,E) (12,1) || ... || (1,1)
+
+                O que acontece se te entregarem 0? P(0,0)
+                ***Insastisfeitos***
+
                 Transfere 1 carro para outra filial, aka perde um carro
                 P(4 -> 5) => (E,P) (1,0) || (2,1) || (3,2) || (4,3) || (5,4)
                 Estado == -1 -> P(4 -> 5) => (E,P) (2,0) || (3,1) || (4,2) || (5,3) || ?(6,4)?
@@ -423,15 +469,24 @@ public class Main {
         double []lucro_f1_acc=new double[7];
         double []lucro_f2_acc=new double[7];
 
+        StringBuilder sb = new StringBuilder();
+        sb.append("P(" + n_atual + "," + n_depois + "):\n");
+
         for (int estado = -3; estado <= 3; estado++) {
+            sb.append("E = " + estado + "\n");
             if( (n_depois-estado) >= 0 && (n_depois-estado) < 13){
                 for (int i = n_atual + 1 ; i < 13; i++) {//Pedidos
                     f1_prob[estado + 3] += f1p[i]*f1e[n_depois-estado];
                     f2_prob[estado + 3] += f2p[i]*f2e[n_depois-estado];
-                    System.out.println("E = " + estado + " e P(" + n_atual + "," + n_depois + ") com " + i +" pedidos e " + (n_depois-estado) + " entregas");
+                    sb.append(i +" pedidos e " + (n_depois-estado) + " entregas\n");
                 }
             }
         }
+
+        sb.append("\n");
+        String s = sb.toString();
+
+        //System.out.println(s);
 
         return new Par ( new Par(lucro_f1_acc,lucro_f2_acc),new Par(f1_prob, f2_prob));
     }

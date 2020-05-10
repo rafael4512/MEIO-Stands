@@ -147,7 +147,7 @@ public class Matrix {
         return res;
     }
 
-    public static double[][][] createBig(double[][][] f1, double[][][] f2) {
+    public static double[][][] createProbBig(double[][][] f1, double[][][] f2) {
         double [][][]result;
         int a = f1.length; // Num estados
         int b = f1[0].length; // Linhas
@@ -171,6 +171,41 @@ public class Matrix {
 
         return result;
     }
+
+    public static double[][][] createBigCustos(double[][][] l1, double[][][] l2, double[][][] p1, double[][][] p2) {
+        double [][][]result;
+        int a = l1.length; // Num estados
+        int b = l1[0].length; // Linhas
+        int c = l1[0][0].length; // Colunas
+        int d = l2[0].length; // Linhas
+        int e = l2[0][0].length; // Colunas
+
+        result = new double[a * a][b * d][c * e];
+
+        for (int t = 0; t < a; t++) {
+            for (int i = 0; i < b; i++) {
+                for (int j = 0; j < c; j++) {
+                    for (int k = 0; k < d; k++) {
+                        for (int l = 0; l < e; l++) {
+                            if (p1[t][i][j] != 0 && p2[a - t - 1][k][l] != 0) {
+                                result[t][i * 13 + k][j * 13 + l] = (l1[t][i][j] + l2[a - t - 1][k][l]);
+                            } else {
+                                result[t][i * 13 + k][j * 13 + l] = -1000;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /*
+        estadoInicial = M = 42 == ei1 = M/13 = 3 , ei2 = M%13 = 3 - linha
+        estadoFinal = N == ef1 = N/13 , ef2 = N%13 | coluna
+        */
+
+        return result;
+    }
+
 
     public static void printM(double[][] m) {
         StringBuilder sb = new StringBuilder();

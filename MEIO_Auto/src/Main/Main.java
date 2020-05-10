@@ -1,5 +1,8 @@
 package Main;
 
+import javafx.util.Pair;
+
+import javax.sql.rowset.spi.SyncResolver;
 import java.util.Arrays;
 
 public class Main {
@@ -57,7 +60,11 @@ public class Main {
        }
         Matrix.printM(bigCustosMatrix[0]);
         */
-    }
+        //Par ( (Decisões,Fn) , Dn )  ;
+        Par<Par <double[],double[]>, double[][]> sol =resolve_N_iteracao(bigProbMatrix,bigCustosMatrix,5);
+
+
+    };
 
     final int MAX = 13;
 
@@ -131,13 +138,10 @@ public class Main {
     public double[] calcula_Q(double[][]pn,double[][] rn){
         return Matrix.multiply_by_rows(pn,rn);
     }
-
-    public double[] calcula_Pn_Fantes(double[][]pn,double[] fn_1){
-        return Matrix.multiply(pn,fn_1);
-
-    }
-
+    //Calcula a Matriz Vn.
     public double[] calcula_Vn(double[]qn,double[] pn_fn_1){
+        if(qn==null ||pn_fn_1==null )
+            throw new RuntimeException("Null Vector ");
         int t1=qn.length;
         int t2=pn_fn_1.length;
         if(t1!=t2)
@@ -149,96 +153,91 @@ public class Main {
         return res;
     }
 
-    //Retorna o maior elemento.
-    public double escolhe_Maior(double[] vn){
+    //Retorna o maior elemento de um vetor
+    public Par <Integer,Double> escolhe_Maior(double[] vn){
         if (vn==null)
             throw new RuntimeException("NULL Vector on escolhe_Maior");
         double maior=vn[0];
+        int descisao=-3;
         for (int i=1;i<vn.length;i++){
             if (vn[i]>maior){
                 maior=vn[i];
+                descisao=i-3;
             }
         }
-        return maior;
+        return new Par(descisao,maior);
     }
 
     //Retorna o vetor final de forma a maximizar a função objetivo.
-    public double[] solução(double[][] vn){
+    public Par<int[],double[]> solução(double[][] vn){
         int i,j;
         if (vn ==null)
             throw new RuntimeException("Vectors with different sizes!!");
         int t1=vn.length;
-        double res[]=new double[t1];
-        for(i=0;i<t1;i++){
-             res[i]=escolhe_Maior(vn[i]);
+        double casos[]=new double[7];
+        double res[]=new double[169];
+        int decisao[]=new int[169];
+
+        for(j=0;j<169;j++){
+            for(i=0;i<7;i++) //para todos os estados:
+                casos[i] = vn[i][j];
+            Par<Integer, Double> melhorCaso = escolhe_Maior(casos);
+            res[j] = melhorCaso.getSecond();
+            decisao[j] = melhorCaso.getFirst();
         }
-        return res;
+        return new Par (decisao,res);
     }
 
-    public double[] add_vect(double[] a, double[] b){
-        if (a==null || b==null)
-            throw new RuntimeException("NULL Vector");
-        int tam=a.length;
-        if (tam!=b.length){
-            throw new RuntimeException("Vectors with different sizes!!");
-        }
-        double []res=new double[tam];
-        for (int i=0;i<tam;i++){
-            res[i]=a[i]+b[i];
-        }
-        return res;
-    }
 
-    /*
-    public double[] resolve_N_iteracao(double[][] pn1, double[][] pn2,MatCusto mc,int tam,int iteracoes){
-        int i,j;
-        double []fn=new double[13];// Fn inical
-        for (i=0;i<7;i++)
-            fn[i]=0;
+
+    public Par<Par <double[],double[]>, double[][]>resolve_N_iteracao(double[][][] pn,double[][][] rn,int iteracoes){
+        int transf,i,j;
+        Par<int [],double []>  fn=new Par(new double[169], new double[169]);// Fn inical
+        Par<int [],double []>  fn_ant=new Par(new double[169], new double[169]);// Fn anterior.
+        double [][] dn =new double[iteracoes][169];//Vetor Dn para todas as Iterações.
 
         //Vetor Qn
-        double [][] q=new double[7][tam];
-        q[0] = add_vect(calcula_Q(pn1, mc.mCusto0),calcula_Q(pn2, mc.mCusto0) );
-        q[1] = calcula_Q(pn1, mc.mCusto1_f1);
-        q[2] = calcula_Q(pn1, mc.mCusto2_f1);
-        q[3] = calcula_Q(pn1, mc.mCusto3_f1);
-        q[4] = calcula_Q(pn2, mc.mCusto1_f2);
-        q[5] = calcula_Q(pn2, mc.mCusto2_f2);
-        q[6] = calcula_Q(pn2, mc.mCusto3_f2);
+        double [][] q=new double[7][169];
+        for(transf=-3;transf<4;transf++){
+            q[transf+3] = calcula_Q( pn[transf+3],rn[transf+3]);
+        }
 
-
+        //faz as n iteraçoes
         for(j=0;j<iteracoes;j++) {
             //Vetor Vn
-            double vn[][] = new double[13][tam];
-            double []pn_fn_1=Matrix.multiply(pn2, fn);
-            double []pn_fn_2=Matrix.multiply(pn1, fn);
-            for (i = 0; i < 7; i++){
-                if (i==0)
-                    vn[i]=add_vect(calcula_Vn(q[i],pn_fn_1),calcula_Vn(q[i],pn_fn_2 ));
-                else if (i<4)
-                    vn[i]=calcula_Vn(q[i], pn_fn_1);
-                else
-                    vn[i]=calcula_Vn(q[i], pn_fn_2);
+            double vn[][] = new double[7][169];
+
+            for (i = 0; i < 7; i++) {// Para todos as descisões alternativas, de uma iteração
+                double[] pn_fn = Matrix.multiply(pn[i], fn.getSecond());
+                vn[i] = calcula_Vn(q[i], pn_fn);
             }
+            fn_ant=fn;
             fn = solução(vn);
+
+            //Calculo do Dn
+            for(i=0;i<169;i++){
+                dn[j][i] = fn.getSecond()[i] - fn_ant.getSecond()[i];
+            }
         }
-        return fn;
+
+        return new Par(fn,dn);
 
     }
-    */
-
-    public double[][] calculaMatrizTransicao(double[][]f1,double [][]f2){
-        double[][] matrizT=new double[169][169];
-        int i,j,a,b;
-        for(i=0;i<13;i++)
-            for (j = 0; j < 13; j++)
-                for (a = 0; a < 13; a++)
-                    for (b = 0; b < 13; b++)
-                        matrizT[i * 13 + a][j * 13 + b] = f1[i][j] * f2[a][b];
 
 
-        return matrizT;
+    //Tranforma um vetore de 169 em uma matriz
+    public double [][] tranformVectorToMat(double v[]){
+        if (v==null)
+            throw new RuntimeException("Null Vector!");
+        double [][] mat=new double[13][13];
+        int i,j;
 
+        for(i=0;i<13;i++) {
+            for (j = 0; j < 13; j++) {
+                mat[i][j] = v[i * 13 + j];
+            }
+        }
+        return mat;
     }
 
     public static void main(String[] args) {

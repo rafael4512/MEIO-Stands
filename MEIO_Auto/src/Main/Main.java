@@ -16,13 +16,45 @@ public class Main {
     Par<double[][], double[][]>  mProb_sat;
     Par<double[][], double[][]>  mProb_insat;
 
+    Par<double[][][], double[][][]>  probSat;
+    Par<double[][][], double[][][]>  probInsat;
+
+
     MatCusto mCustos;
 
 
     public Main(int tam){
         // mCustos=new  MatCusto(tam);
-        // mProb_sat=  buildMatrixSat(tam);
-        // mProb_insat=  buildMatrixIns(tam);
+        probSat = buildMatrixSat(tam);
+        probInsat = buildMatrixIns(tam);
+
+        double[][][] m1S = probSat.getSecond();
+        double[][][] m1I = probInsat.getSecond();
+
+        /*
+        double[][][] result = new double[7][13][13];
+        for (int i = 0; i < 7; i++) {
+            result[i] = Matrix.add(m1S[i], m1I[i]);
+
+            System.out.println("Estado " + (i - 3));
+            System.out.println("Satisfeito");
+            Matrix.printM(m1S[i]);
+
+            System.out.println("Insatisfeito");
+            Matrix.printM(m1I[i]);
+
+            Matrix.printM(result[i]);
+
+            int indice = 0;
+            for (double[] lista : result[i]) {
+                System.out.println("Estado " + indice + " " + Arrays.stream(lista).sum());
+                indice++;
+            }
+            System.out.println();
+        }
+
+         */
+
     }
 
     public Par<double[][], double[][]> getmProb_sat (){
@@ -55,7 +87,11 @@ public class Main {
     public double calculaLucroInsat(int n_atual,int n_depois,double prob,int estado){
         double tot_acc=0;
 
-        tot_acc+= (30 * n_atual  *  prob );//calculo de  receitas
+        if (estado >= 0) {
+            tot_acc += (30 * (n_atual - estado)  *  prob );//calculo de  receitas
+        } else {
+            tot_acc += (30 * (n_atual)  *  prob );//calculo de  receitas
+        }
 
         if(n_depois>8){
             tot_acc -= (10*prob) ;
@@ -162,9 +198,14 @@ public class Main {
             // estado == 3 -> 3 carros entre carros
             if (estado < 0 && n_depois > 12 + estado) {
                 // Basicamente entregas 1 carro e tentas ficar com 12, entregas 2 carros e tentas ficar com 11 ou 12, ...
+                //System.out.println("E = " + estado + " e P(" + n_atual + " -> " + n_depois + ") e falha em 1");
                 continue;
             } else if (estado > 0 && n_depois < 0 + estado) {
                 // Basicamente tentas ficar com 0, mas recebes pelo menos 1 carro
+                //System.out.println("E = " + estado + " e P(" + n_atual + " -> " + n_depois + ") e falha em 2");
+                continue;
+            } else if (n_atual < -estado) {
+                //System.out.println("E = " + estado + " e P(" + n_atual + " -> " + n_depois + ") e falha em 3");
                 continue;
             } else if (estado >= 0 && n_depois == 12) {
                 for (int i = n_atual, f = n_depois; i >= 0 && f >= 0 ; i--, f--) { // Entregas
@@ -175,8 +216,10 @@ public class Main {
                         f2_prob[estado + 3] += f2p[j] * f2e[f];
 
                         //Calcula o  lucro para todos os  estados
-                        lucro_f1_acc[estado + 3] += calculaLucroSat(j, f, f1p[j] * f1e[f], estado);
-                        lucro_f2_acc[estado + 3] += calculaLucroSat(j, f, f2p[j] * f2e[f], estado);
+                        lucro_f1_acc[estado + 3] += calculaLucroSat(j, n_depois, f1p[j] * f1e[f], estado);
+                        lucro_f2_acc[estado + 3] += calculaLucroSat(j, n_depois, f2p[j] * f2e[f], estado);
+
+                        //System.out.println("E = " + estado + " e P(" + n_atual + " -> " + n_depois + ") com " + i + " pedidos e " + f + " entregas");
                     }
                 }
             } else if (estado >= 0 && n_depois >= n_atual) {
@@ -194,6 +237,8 @@ public class Main {
 
                     lucro_f1_acc[estado + 3] += calculaLucroSat(i, j, f1p[i] * f1e[j], estado);
                     lucro_f2_acc[estado + 3] += calculaLucroSat(i, j, f2p[i] * f2e[j], estado);
+
+                    //System.out.println("E = " + estado + " e P(" + n_atual + " -> " + n_depois + ") com " + i + " pedidos e " + j + " entregas");
                 }
             } else if (estado >= 0 && n_atual > n_depois) {
             /*
@@ -204,8 +249,10 @@ public class Main {
                     f1_prob[estado + 3] += f1p[i] * f1e[j];
                     f2_prob[estado + 3] += f2p[i] * f2e[j];
 
-                    lucro_f1_acc[estado + 3] += calculaLucroSat(i, j, f1p[i] * f1e[j], estado);
-                    lucro_f2_acc[estado + 3] += calculaLucroSat(i, j, f2p[i] * f2e[j], estado);
+                    lucro_f1_acc[estado + 3] += calculaLucroSat(i, n_depois, f1p[i] * f1e[j], estado);
+                    lucro_f2_acc[estado + 3] += calculaLucroSat(i, n_depois, f2p[i] * f2e[j], estado);
+
+                    //System.out.println("E = " + estado + " e P(" + n_atual + " -> " + n_depois + ") com " + i + " pedidos e " + j + " entregas");
                 }
             } else if (estado < 0 && n_depois == 12 + estado) {
                 // Basicamente entregas carros e tinhas ficado 12 e depois "perdes" alguns dos 12 dos carros que tinhas
@@ -235,8 +282,10 @@ public class Main {
                         // Filial 2, será que está correto?
                         f2_prob[estado + 3] += f2p[j] * f2e[f];
 
-                        lucro_f1_acc[estado + 3] += calculaLucroSat(j, f, f1p[j] * f1e[f], estado);
-                        lucro_f2_acc[estado + 3] += calculaLucroSat(j, f, f2p[j] * f2e[f], estado);
+                        lucro_f1_acc[estado + 3] += calculaLucroSat(j, n_depois, f1p[j] * f1e[f], estado);
+                        lucro_f2_acc[estado + 3] += calculaLucroSat(j, n_depois, f2p[j] * f2e[f], estado);
+
+                        //System.out.println("E = " + estado + " e P(" + n_atual + " -> " + n_depois + ") com " + i + " pedidos e " + j + " entregas");
                     }
                 }
             } else if (estado < 0 && n_depois >= n_atual) {
@@ -249,8 +298,10 @@ public class Main {
                     f1_prob[estado + 3] += f1p[i] * f1e[j];
                     f2_prob[estado + 3] += f2p[i] * f2e[j];
 
-                    lucro_f1_acc[estado + 3] += calculaLucroSat(i, j, f1p[i] * f1e[j], estado);
-                    lucro_f2_acc[estado + 3] += calculaLucroSat(i, j, f2p[i] * f2e[j], estado);
+                    lucro_f1_acc[estado + 3] += calculaLucroSat(i, n_depois, f1p[i] * f1e[j], estado);
+                    lucro_f2_acc[estado + 3] += calculaLucroSat(i, n_depois, f2p[i] * f2e[j], estado);
+
+                    //System.out.println("E = " + estado + " e P(" + n_atual + " -> " + n_depois + ") com " + i + " pedidos e " + j + " entregas");
                 }
             } else if (estado < 0 && n_atual > n_depois) {
             /*
@@ -263,8 +314,10 @@ public class Main {
                     f1_prob[estado + 3] += f1p[i] * f1e[j];
                     f2_prob[estado + 3] += f2p[i] * f2e[j];
 
-                    lucro_f1_acc[estado + 3]+=calculaLucroSat(i, j, f1p[i] * f1e[j], estado);
-                    lucro_f2_acc[estado + 3]+=calculaLucroSat(i, j, f2p[i] * f2e[j], estado);
+                    lucro_f1_acc[estado + 3]+=calculaLucroSat(i, n_depois, f1p[i] * f1e[j], estado);
+                    lucro_f2_acc[estado + 3]+=calculaLucroSat(i, n_depois, f2p[i] * f2e[j], estado);
+
+                    //System.out.println("E = " + estado + " e P(" + n_atual + " -> " + n_depois + ") com " + i + " pedidos e " + j + " entregas");
                 }
             }
         }
@@ -273,7 +326,7 @@ public class Main {
     }
 
     //Constroi a matriz Satizfação.
-    public  Par<double[][], double[][]> buildMatrixSat(int tam) {
+    public  Par<double[][][], double[][][]> buildMatrixSat(int tam) {
         int i, j;
         double[][][] m1 = new double[7][tam][tam];
         double[][][] m2 = new double[7][tam][tam];
@@ -313,21 +366,7 @@ public class Main {
 
             }
         }
-
-        System.out.println(m1.length*m1[0].length * m1[0][0].length);
-        for (int estado = -3; estado < 4; estado++) {
-            System.out.println("Estado " + estado);
-            Matrix.printM(m1[estado + 3]);
-            int indice = 0;
-            for (double[] lista : m1[estado + 3]) {
-                System.out.println("Estado " + indice + " " + Arrays.stream(lista).sum());
-                indice++;
-            }
-            System.out.println();
-        }
-
-        //return new Par(m1, m2);
-        return null;
+        return new Par(m1, m2);
     }
 
     //Calcula uma probabilidade de insatizfação, dado no numero de carros atual e o numero final.
@@ -353,77 +392,92 @@ public class Main {
 
         return new Par ( new Par(lucro_f1_acc,lucro_f2_acc),new Par(f1_prob, f2_prob));
     }*/
+/*
     public   Par<Par<double[], double[]> ,Par<Double, Double>> calculaInsat(int n_atual, int n_depois) {
+        double f1_prob = 0;
+        double f2_prob = 0;
+        int i,estado;
+        double []lucro_f1_acc=new double[4];
+        double []lucro_f2_acc=new double[4];
+        i=n_atual+1;
+        while ( i<13 ) {
+            System.out.print("P("+i+")"+"*"+"E("+n_depois+")+");
+            f1_prob+=f1p[i]*f1e[n_depois];
+            f2_prob+=f2p[i]*f2e[n_depois];
+            for (estado=0;estado<4;estado++) {
+                lucro_f1_acc[estado]+=calculaLucroInsat(n_atual, n_depois, f1p[i] * f1e[n_depois], estado);
+                lucro_f2_acc[estado]+=calculaLucroInsat(n_atual, n_depois, f2p[i] * f2e[n_depois], estado);
+            }
+            i++;
+        }
+        //System.out.print("\t"+f1_prob);
+        //System.out.println();
+
+        return new Par ( new Par(lucro_f1_acc,lucro_f2_acc),new Par(f1_prob, f2_prob));
+    }
+ */
+
+    public   Par<Par<double[], double[]> ,Par<double[], double[]>> calculaInsat(int n_atual, int n_depois) {
         double []f1_prob = new double[7];
         double []f2_prob = new double[7];
         double []lucro_f1_acc=new double[7];
         double []lucro_f2_acc=new double[7];
 
-        /*
-        Estado == 0 -> P(4 - 1) -> (P,E) == (4,0) || (5,0) || ... || (12,0)
-                                            (5,1) || (6,1) || ... || (12,1)
-
-        Entregar 1 carro == Estado -1 -> P(4 - 1) -> (P,E) == (3,0) || (4,0) || ... || (12,0)
-                                                              (4,1) || (5,1) || ... || (12,1)
-                                                              (5,2) || (6,2) || ... || (12,2)
-
-        Entregar 2 carro == Estado -2 -> P(4 - 1) -> (P,E) == (2,0) || (3,0) || ... || (12,0)
-                                                              (3,1) || (4,1) || ... || (12,1)
-                                                              (4,2) || (5,2) || ... || (12,2)
-                                                              (5,3) || (6,3) || ... || (12,3)
-
-        Receber 2 carros == Estado 2 -> P(4-1) Impossível == 0
-
-        Estado 0 -> P(8-6) => (P,E) == (3,0) || (4,0) || ... || (12,0)
-                                       (4,1) || ... || (12,1)
-                                       ...
-                                       (8,5) || (9,5) || ... || (12,5)
-                                       (9,6) || ... || (12,6)
-
-        Receber 2 carros == Estado 2 -> P(8-6) => (5,0) || (6,0) || ... || (12,0)
-                                                  (6,1) || ... || (12,1)
-                                                  (7,2) || ... || (12,2)
-                                                  (8,3) || ... || (12,3)
-                                                  (9,4) || ... || (12,4)
-        */
         for (int estado = -3; estado <= 3; estado++) {
-            for (int i = n_atual + 1; i < 13; i++) {
-                f1_prob[estado + 3] += f1p[i]*f1e[n_depois];
-                f2_prob[estado + 3] += f2p[i]*f2e[n_depois];
-
-                lucro_f1_acc[estado] += calculaLucroInsat(n_atual, n_depois, f1p[i] * f1e[n_depois], estado);
-                lucro_f2_acc[estado] += calculaLucroInsat(n_atual, n_depois, f2p[i] * f2e[n_depois], estado);
+            if( (n_depois-estado) >= 0 && (n_depois-estado) < 13){
+                for (int i = n_atual + 1 ; i < 13; i++) {//Pedidos
+                    f1_prob[estado + 3] += f1p[i]*f1e[n_depois-estado];
+                    f2_prob[estado + 3] += f2p[i]*f2e[n_depois-estado];
+                    System.out.println("E = " + estado + " e P(" + n_atual + "," + n_depois + ") com " + i +" pedidos e " + (n_depois-estado) + " entregas");
+                }
             }
         }
 
         return new Par ( new Par(lucro_f1_acc,lucro_f2_acc),new Par(f1_prob, f2_prob));
     }
 
+
+
     //Constroi a matriz Insatizfação.
-    public  Par<double[][], double[][]> buildMatrixIns(int tam) {
+    public  Par<double[][][], double[][][]> buildMatrixIns(int tam) {
         int i, j;
-        double[][] m1 = new double[tam][tam];
-        m1 = Matrix.init(tam, 0);
-        double[][] m2 = new double[tam][tam];
-        m2 = Matrix.init(tam, 0);
-        Par<Par<double[], double[]>,Par<Double, Double> > Custos_probs;
-        for (i = 0; i < tam; i++) {
-            for (j = 0; j < tam; j++) {
-                Custos_probs = calculaInsat(i, j);
-                m1[i][j] =Custos_probs.getSecond().getFirst();
-                m2[i][j] =Custos_probs.getSecond().getSecond();
-                //Matiz de custos;
-                double[] valC_f1=Custos_probs.getFirst().getFirst();
-                double[] valC_f2=Custos_probs.getFirst().getSecond();
-                this.mCustos.inc0(valC_f1[0]+valC_f2[0],i,j);
-                this.mCustos.inc11(valC_f1[1],i,j);
-                this.mCustos.inc12(valC_f1[2],i,j);
-                this.mCustos.inc13(valC_f1[3],i,j);
-                this.mCustos.inc21(valC_f2[1],i,j);
-                this.mCustos.inc22(valC_f2[2],i,j);
-                this.mCustos.inc23(valC_f2[3],i,j);
+            double[][][] m1 = new double[7][tam][tam];
+            double[][][] m2 = new double[7][tam][tam];
+
+            //m1 = Matrix.init(tam, 0);
+            //m2 = Matrix.init(tam, 0);
+
+
+            //este par tem aqui as probabilidades
+            Par<Par<double[], double[]>,Par<double[], double[]> > Custos_probs;
+
+            for (i = 0; i < tam; i++) {
+                for (j = 0; j < tam; j++) {
+                    Custos_probs = calculaInsat(i, j);
+
+                    // Matriz
+                    double[] probs1 = Custos_probs.getSecond().getFirst();
+                    double[] probs2 = Custos_probs.getSecond().getSecond();
+
+                    for (int estado = -3; estado < 4; estado++) {
+                        m1[estado + 3][i][j] = probs1[estado + 3];
+                        m2[estado + 3][i][j] = probs2[estado + 3];
+                    }
+                    /*
+                    //Matiz de custos;
+                    double[] valC_f1=Custos_probs.getFirst().getFirst();
+                    double[] valC_f2=Custos_probs.getFirst().getSecond();
+                    this.mCustos.inc0(valC_f1[0]+valC_f2[0],i,j);
+                    this.mCustos.inc11(valC_f1[1],i,j);
+                    this.mCustos.inc12(valC_f1[2],i,j);
+                    this.mCustos.inc13(valC_f1[3],i,j);
+                    this.mCustos.inc21(valC_f2[1],i,j);
+                    this.mCustos.inc22(valC_f2[2],i,j);
+                    this.mCustos.inc23(valC_f2[3],i,j);
+                    */
+                }
             }
-        }
+
         return new Par(m1, m2);
     }
 
@@ -558,7 +612,7 @@ public class Main {
         //}
         */
 
-        a.buildMatrixSat(13);
+        // a.buildMatrixSat(13);
     }
 }
 

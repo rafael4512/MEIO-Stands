@@ -22,7 +22,6 @@ public class Main {
 
     MatCusto mCustos;
 
-
     public Main(int tam){
         // mCustos=new  MatCusto(tam);
         probSat = buildMatrixSat(tam);
@@ -44,6 +43,7 @@ public class Main {
 
         double[][][] lucro1 = new double[7][13][13];
         double[][][] lucro2 = new double[7][13][13];
+            /*
 
         for (int i = 0; i < 7; i++) {
             result1[i] = Matrix.add(m1S[i], m1I[i]);
@@ -52,39 +52,54 @@ public class Main {
             lucro1[i] = Matrix.add(l1S[i], l1I[i]);
             lucro2[i] = Matrix.add(l2S[i], l2I[i]);
 
-            /*
             System.out.println("Estado " + (i - 3));
-            */
 
-            /*
+
             System.out.println("Satisfeito");
             Matrix.printM(m1S[i]);
 
             System.out.println("Insatisfeito");
             Matrix.printM(m1I[i]);
-            */
 
-            // Matrix.printM(result1[i]);
+            Matrix.printM(result1[i]);
 
-            /*
+
             int indice = 0;
             for (double[] lista : result1[i]) {
                 System.out.println("Linha " + indice + " " + Arrays.stream(lista).sum());
                 indice++;
             }
             System.out.println();
-            */
+
         }
 
         double [][]matEstato3 = calculaMatrizEstadosv2(-3, result1[3]);
         double [][]matLucro3 = calculaMatrizLucrosv2(3, lucro1[3]);
+            */
 
+        Par<double[][][], double[][][]> mats;
+        mats = criarMatriz();
+        double[][][] p = mats.getFirst();
+        double[][][] l = mats.getSecond();
+
+        for (int i = -3; i < 4; i++) {
+            System.out.println("Transferência " + i);
+            Matrix.printM(p[i + 3]);
+            Matrix.printM(l[i + 3]);
+            int indice = 0;
+            for (double[] lista : p[i + 3]) {
+                System.out.println("Linha " + indice + " " + Arrays.stream(lista).sum());
+                indice++;
+            }
+            System.out.println();
+        }
+
+        /*
         System.out.println("Lucro para Estado 0");
         Matrix.printM(lucro1[3]);
 
         System.out.println("Lucro para Estado 3");
         Matrix.printM(matLucro3);
-
 
         System.out.println("Estado 0");
         Matrix.printM(result1[3]);
@@ -94,6 +109,8 @@ public class Main {
 
         System.out.println("Estado -3 nosso");
         Matrix.printM(result1[0]);
+        */
+
         /*
         double[][][] bigMatrix;
         bigMatrix = Matrix.createBig(result1, result2);
@@ -108,6 +125,65 @@ public class Main {
             }
         }
         */
+
+    }
+
+    final int MAX = 13;
+    final int MAXMAX = 13 * 13;
+
+    private int min(int a, int b) {
+        return (a > b) ? b : a;
+    }
+
+    private int max(int a, int b) {
+        return (a > b) ? a : b;
+    }
+
+    public Par<double[][][], double[][][]> criarMatriz(){
+        double[][][] probs = new double[7][MAX][MAX];
+        double[][][] lucrs = new double[7][MAX][MAX];
+
+        for (int t = -3; t < 4; t++) {
+            for (int n_Inicial = 0; n_Inicial < MAX; n_Inicial++) {
+                for (int e = 0; e < MAX; e++) {
+                    for (int p = 0; p < MAX; p++) {
+
+                        int pAtendidos = min(n_Inicial, p);
+                        int fim = min(n_Inicial - pAtendidos + e, MAX - 1);
+
+                        fim = max(fim + t, 0);
+                        fim = min(fim, MAX - 1);
+
+                        double prob = f1p[p] * f1e[e];
+                        probs[t + 3][n_Inicial][fim] += prob;
+                        lucrs[t + 3][n_Inicial][fim] += calculaLucros(fim, pAtendidos, prob, t);
+                    }
+                }
+            }
+        }
+
+        for (int t = -3; t < 4; t++) {
+            for (int i = 0; i < MAX; i++) {
+                for (int j = 0; j < MAX; j++) {
+                    lucrs[t + 3][i][j] /= probs[t + 3][i][j];
+                    if (Double.isNaN(lucrs[t + 3][i][j])) {
+                        lucrs[t + 3][i][j] = -1000;
+                    }
+                }
+            }
+        }
+        return new Par(probs, lucrs);
+    }
+
+    public double calculaLucros(int qtFim, int pedidosAtendidos, double prob, int transf) {
+        double sum = 0.0;
+
+        if (qtFim > 8) sum -= 10 * prob;
+        if (transf < 0) sum += transf * 7 * prob;
+
+        sum += pedidosAtendidos * 30 * prob;
+
+        return sum;
     }
 
     public Par<double[][], double[][]> getmProb_sat (){
@@ -454,7 +530,6 @@ public class Main {
 
         for (int i = - trans, realI = 0; i < mat0.length - trans; i++, realI++) { // Cursor linhas Matriz inicial
             for (int j = 0; j < mat0[0].length; j++) { // Cursor colunas Matriz inicial
-
                 if (i < 0) {
                     result[i + 13][j] = -1000;
                     continue;
@@ -463,9 +538,7 @@ public class Main {
                     result[i - 13][j] = -1000;
                     continue;
                 }
-
                 result[i][j] += mat0[realI][j];
-
 
                 if (trans < 0) result[i][j] += trans * 7;
             }

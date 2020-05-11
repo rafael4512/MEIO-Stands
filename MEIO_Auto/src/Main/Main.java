@@ -21,11 +21,14 @@ public class Main {
         double[][][] p1 = mats.getFirst().getFirst();
         double[][][] p2 = mats.getFirst().getSecond();
 
+
         double[][][] l1 = mats.getSecond().getFirst();
         double[][][] l2 = mats.getSecond().getSecond();
+       // Matrix.printM(p1[2]);
+       // Matrix.printM(l1[2]);
 
 
-        for (int i = -3; i < 4; i++) {
+        /*for (int i = -3; i < 4; i++) {
             System.out.println("Transferência " + i);
             Matrix.printM(p1[i + 3]);
             Matrix.printM(l1[i + 3]);
@@ -35,12 +38,13 @@ public class Main {
                 indice++;
             }
             System.out.println();
-        }
+        }*/
 
         double[][][] bigProbMatrix;
         bigProbMatrix = Matrix.createProbBig(p1, p2);
+        //for(int i=0;i<7;i++)
 
-        for (int i = 0; i < 7; i++) {
+        /*for (int i = 0; i < 7; i++) {
             System.out.println("Estado " + (i - 3));
             Matrix.printM(bigProbMatrix[i]);
 
@@ -48,20 +52,25 @@ public class Main {
                 double sum = Arrays.stream(bigProbMatrix[3][i]).sum();
                 System.out.println("Linha " + j + " = " + sum);
             }
-        }
+        }*/
 
         double[][][] bigCustosMatrix;
         bigCustosMatrix = Matrix.createBigCustos(l1, l2, p1, p2);
+        //printCSV(bigCustosMatrix[6]);
 
-        /*
-        for (int i = 0; i < 7; i++) {
+        /*for (int i = 0; i < 7; i++) {
             System.out.println("Estado " + (i - 3));
             Matrix.printM(bigCustosMatrix[i]);
        }
         Matrix.printM(bigCustosMatrix[0]);
         */
         //Par ( (Decisões,Fn) , Dn )  ;
-        Par<Par <double[],double[]>, double[][]> sol =resolve_N_iteracao(bigProbMatrix,bigCustosMatrix,5);
+        Par<Par <double[],double[]>, double[][]> sol =resolve_N_iteracao(bigProbMatrix,bigCustosMatrix,30);
+
+        for(int i=0;i<30;i++){
+            System.out.println("Iteracao:"+i);
+            printCSV(sol.getSecond()[i]);
+        }
 
 
     };
@@ -97,7 +106,7 @@ public class Main {
                         probs1[t + 3][n_Inicial][fim] += prob1;
                         lucrs1[t + 3][n_Inicial][fim] += calculaLucros(fim, pAtendidos, prob1, t);
 
-                        double prob2 = f1p[p] * f1e[e];
+                        double prob2 = f2p[p] * f2e[e];
                         probs2[t + 3][n_Inicial][fim] += prob2;
                         lucrs2[t + 3][n_Inicial][fim] += calculaLucros(fim, pAtendidos, prob2, t);
                     }
@@ -188,8 +197,7 @@ public class Main {
         return new Par (decisao,res);
     }
 
-
-
+    //Calcula a solução do problema.
     public Par<Par <double[],double[]>, double[][]>resolve_N_iteracao(double[][][] pn,double[][][] rn,int iteracoes){
         int transf,i,j;
         Par<int [],double []>  fn=new Par(new double[169], new double[169]);// Fn inical
@@ -207,7 +215,7 @@ public class Main {
             //Vetor Vn
             double vn[][] = new double[7][169];
 
-            for (i = 0; i < 7; i++) {// Para todos as descisões alternativas, de uma iteração
+            for (i = 0; i < 7; i++) {// Para todos as decisões alternativas, de uma iteração
                 double[] pn_fn = Matrix.multiply(pn[i], fn.getSecond());
                 vn[i] = calcula_Vn(q[i], pn_fn);
             }
@@ -219,11 +227,42 @@ public class Main {
                 dn[j][i] = fn.getSecond()[i] - fn_ant.getSecond()[i];
             }
         }
-
         return new Par(fn,dn);
-
     }
 
+    //Print de Matrizes para csv de doubles.
+    public void printCSV(double [][] m){
+        StringBuilder sb = new StringBuilder();
+        sb.append("_;");
+        for (int j = 0; j < m[0].length; j++) {
+            if (j == m[0].length - 1)
+                sb.append(j);
+            else
+                sb.append(j+";");
+        }
+        sb.append("\n");
+        for (int i=0;i<m.length;i++) {
+            sb.append(i+";");
+            for (int j = 0; j < m[0].length; j++) {
+                if (j == m[0].length - 1)
+                    sb.append(String.format("%10.4f", m[i][j]));
+                else
+                    sb.append(String.format("%10.4f;", m[i][j]));
+            }
+            sb.append("\n");
+        }
+        System.out.println(sb.toString());
+    }
+
+    //Print de um Vetor para csv.
+    public void printCSV(double [] m){
+        StringBuilder sb = new StringBuilder();
+
+        for (int j = 0; j < m.length; j++) {
+                sb.append(String.format("%10.2f\n", m[j]));
+        }
+        System.out.println(sb.toString());
+    }
 
     //Tranforma um vetore de 169 em uma matriz
     public double [][] tranformVectorToMat(double v[]){

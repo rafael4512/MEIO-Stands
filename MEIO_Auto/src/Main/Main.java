@@ -9,7 +9,9 @@ public class Main {
 
     //FILIAL1- Probabilidade de entregas e pedidos
     private static double[] f1p = {0.0272, 0.0944, 0.1552, 0.2092, 0.1932, 0.1476, 0.0864, 0.0528, 0.0208, 0.0088, 0.0032, 0.0012, 0.0000};
+    //private static double[] f2p = {0.0272, 0.0944, 0.1552, 0.2092, 0.1932, 0.1476, 0.0864, 0.0528, 0.0208, 0.0088, 0.0032, 0.0012, 0.0000};
     private static double[] f1e = {0.0404, 0.0676, 0.1024, 0.1392, 0.1396, 0.1236, 0.1012, 0.0896, 0.0740, 0.0572, 0.0388, 0.0220, 0.0044};
+    //private static double[] f2e = {0.0404, 0.0676, 0.1024, 0.1392, 0.1396, 0.1236, 0.1012, 0.0896, 0.0740, 0.0572, 0.0388, 0.0220, 0.0044};
 
     //FILIAL2 - Probabilidade de entregas e pedidos
     private static double[] f2p = {0.0292, 0.0724, 0.1168, 0.1488, 0.1452, 0.1116, 0.0968, 0.0824, 0.0736, 0.0508, 0.0376, 0.0268, 0.0080};
@@ -42,7 +44,6 @@ public class Main {
 
         double[][][] bigProbMatrix;
         bigProbMatrix = Matrix.createProbBig(p1, p2);
-        //for(int i=0;i<7;i++)
 
         /*for (int i = 0; i < 7; i++) {
             System.out.println("Estado " + (i - 3));
@@ -65,12 +66,10 @@ public class Main {
         Matrix.printM(bigCustosMatrix[0]);
         */
         //Par ( (Decisões,Fn) , Dn )  ;
-        Par<Par <double[],double[]>, double[][]> sol =resolve_N_iteracao(bigProbMatrix,bigCustosMatrix,30);
+        Par<Par <int[],double[]>, double[][]> sol =resolve_N_iteracao(bigProbMatrix,bigCustosMatrix,25);
+        //printCSV1(sol.getFirst().getFirst());
+        //printCSV(sol.getFirst().getSecond());
 
-        for(int i=0;i<30;i++){
-            System.out.println("Iteracao:"+i);
-            printCSV(sol.getSecond()[i]);
-        }
 
 
     };
@@ -172,6 +171,7 @@ public class Main {
             if (vn[i]>maior){
                 maior=vn[i];
                 descisao=i-3;
+
             }
         }
         return new Par(descisao,maior);
@@ -198,12 +198,13 @@ public class Main {
     }
 
     //Calcula a solução do problema.
-    public Par<Par <double[],double[]>, double[][]>resolve_N_iteracao(double[][][] pn,double[][][] rn,int iteracoes){
+    public Par<Par <int[],double[]>, double[][]>resolve_N_iteracao(double[][][] pn,double[][][] rn,int iteracoes){
         int transf,i,j;
         Par<int [],double []>  fn=new Par(new double[169], new double[169]);// Fn inical
         Par<int [],double []>  fn_ant=new Par(new double[169], new double[169]);// Fn anterior.
         double [][] dn =new double[iteracoes][169];//Vetor Dn para todas as Iterações.
 
+        int AUX=0;
         //Vetor Qn
         double [][] q=new double[7][169];
         for(transf=-3;transf<4;transf++){
@@ -218,10 +219,15 @@ public class Main {
             for (i = 0; i < 7; i++) {// Para todos as decisões alternativas, de uma iteração
                 double[] pn_fn = Matrix.multiply(pn[i], fn.getSecond());
                 vn[i] = calcula_Vn(q[i], pn_fn);
+
             }
             fn_ant=fn;
             fn = solução(vn);
+            //System.out.println("Interacao:"+AUX);
+            AUX++;
 
+            //printCSV(fn.getSecond());
+            printCSV1(fn.getFirst());
             //Calculo do Dn
             for(i=0;i<169;i++){
                 dn[j][i] = fn.getSecond()[i] - fn_ant.getSecond()[i];
@@ -254,6 +260,29 @@ public class Main {
         System.out.println(sb.toString());
     }
 
+    public void printCSV1(int [] m){
+        StringBuilder sb = new StringBuilder();
+        for (int j = 0; j < m.length; j++) {
+            sb.append(j+";;");
+            if(m[j]==-3){
+                sb.append(String.format("Transferir 3 da Filial 1 para 2;\n", m[j]));
+            }else if (m[j]==-2){
+                sb.append(String.format("Transferir 2 da Filial 1 para 2;\n", m[j]));
+            }else if(m[j]==-1){
+                sb.append(String.format("Transferir 1 da Filial 1 para 2;\n", m[j]));
+            }else if (m[j]==0){
+                sb.append(String.format("Nao Transferir;\n", m[j]));
+            }else if(m[j]==1){
+                sb.append(String.format("Transferir 1 da Filial 2 para 1;\n", m[j]));
+            }else if (m[j]==2){
+                sb.append(String.format("Transferir 2 da Filial 2 para 1;\n", m[j]));
+            }else if(m[j]==3){
+                sb.append(String.format("Transferir 3 da Filial 2 para 1;\n", m[j]));
+            }
+
+        }
+        System.out.println(sb.toString());
+    }
     //Print de um Vetor para csv.
     public void printCSV(double [] m){
         StringBuilder sb = new StringBuilder();

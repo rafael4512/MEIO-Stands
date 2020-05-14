@@ -9,7 +9,7 @@ public class Matrix {
         for (i = 0; i < n; i++)
             for ( j = 0;j < n; j++){
                 a[i][j]=val;
-        }
+            }
         return a;
     }
 
@@ -41,7 +41,6 @@ public class Matrix {
             aux_sum[i]=val;
         }
         return aux_sum;
-
     }
 
 
@@ -149,7 +148,7 @@ public class Matrix {
 
     public static double[][][] createProbBig(double[][][] f1, double[][][] f2) {
         double [][][]result;
-        int a = f1.length; // Num estados
+        int a = f1.length; // Num transferências
         int b = f1[0].length; // Linhas
         int c = f1[0][0].length; // Colunas
         int d = f2[0].length; // Linhas
@@ -157,12 +156,12 @@ public class Matrix {
 
         result = new double[a * a][b * d][c * e];
 
-        for (int estado = 0; estado < a; estado++) {
+        for (int t = 0; t < a; t++) {
             for (int i = 0; i < b; i++) {
                 for (int j = 0; j < c; j++) {
                     for (int k = 0; k < d; k++) {
                         for (int l = 0; l < e; l++) {
-                            result[estado][i * 13 + k][j * 13 + l] = f1[estado][i][j] * f2[a - 1 - estado][k][l];
+                            result[t][i * 13 + k][j * 13 + l] = f1[t][i][j] * f2[a - 1 - t][k][l];
                         }
                     }
                 }
@@ -174,7 +173,7 @@ public class Matrix {
 
     public static double[][][] createBigCustos(double[][][] l1, double[][][] l2, double[][][] p1, double[][][] p2) {
         double [][][]result;
-        int a = l1.length; // Num estados
+        int a = l1.length; // Num transferências
         int b = l1[0].length; // Linhas
         int c = l1[0][0].length; // Colunas
         int d = l2[0].length; // Linhas
@@ -197,12 +196,6 @@ public class Matrix {
                 }
             }
         }
-
-        /*
-        estadoInicial = M = 42 == ei1 = M/13 = 3 , ei2 = M%13 = 3 - linha
-        estadoFinal = N == ef1 = N/13 , ef2 = N%13 | coluna
-        */
-
         return result;
     }
 
@@ -210,23 +203,23 @@ public class Matrix {
     public static void printM(double[][] m) {
         StringBuilder sb = new StringBuilder();
 
-        int N = m.length;
-
+        int N = m.length;//linhas
+        int M=m[0].length;//colunas
         sb.append("    |");
-        for (int i = 0; i < N; i++) {
+        for (int i = 0; i < M; i++) {
             sb.append(String.format(" %10d |", i));
         }
         sb.append("\n");
 
         sb.append("____|");
-        for (int i = 0; i < N; i++) {
+        for (int i = 0; i < M; i++) {
             sb.append("____________|");
         }
         sb.append("\n");
 
         for (int i = 0; i < N; i++) {
             sb.append(String.format("%3d |", i));
-            for (int j = 0; j < N; j++) {
+            for (int j = 0; j < M; j++) {
                 sb.append(String.format(" %10.4f |",m[i][j]));
             }
             sb.append("\n");

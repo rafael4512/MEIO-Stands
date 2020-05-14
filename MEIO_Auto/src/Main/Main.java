@@ -1,17 +1,11 @@
 package Main;
 
-import javafx.util.Pair;
-
-import javax.sql.rowset.spi.SyncResolver;
-import java.util.Arrays;
-
 public class Main {
 
     //FILIAL1- Probabilidade de entregas e pedidos
     private static double[] f1p = {0.0272, 0.0944, 0.1552, 0.2092, 0.1932, 0.1476, 0.0864, 0.0528, 0.0208, 0.0088, 0.0032, 0.0012, 0.0000};
-    //private static double[] f2p = {0.0272, 0.0944, 0.1552, 0.2092, 0.1932, 0.1476, 0.0864, 0.0528, 0.0208, 0.0088, 0.0032, 0.0012, 0.0000};
     private static double[] f1e = {0.0404, 0.0676, 0.1024, 0.1392, 0.1396, 0.1236, 0.1012, 0.0896, 0.0740, 0.0572, 0.0388, 0.0220, 0.0044};
-    //private static double[] f2e = {0.0404, 0.0676, 0.1024, 0.1392, 0.1396, 0.1236, 0.1012, 0.0896, 0.0740, 0.0572, 0.0388, 0.0220, 0.0044};
+
 
     //FILIAL2 - Probabilidade de entregas e pedidos
     private static double[] f2p = {0.0292, 0.0724, 0.1168, 0.1488, 0.1452, 0.1116, 0.0968, 0.0824, 0.0736, 0.0508, 0.0376, 0.0268, 0.0080};
@@ -23,56 +17,22 @@ public class Main {
         double[][][] p1 = mats.getFirst().getFirst();
         double[][][] p2 = mats.getFirst().getSecond();
 
-
         double[][][] l1 = mats.getSecond().getFirst();
         double[][][] l2 = mats.getSecond().getSecond();
-       // Matrix.printM(p1[2]);
-       // Matrix.printM(l1[2]);
-
-
-        /*for (int i = -3; i < 4; i++) {
-            System.out.println("Transferência " + i);
-            Matrix.printM(p1[i + 3]);
-            Matrix.printM(l1[i + 3]);
-            int indice = 0;
-            for (double[] lista : p1[i + 3]) {
-                System.out.println("Linha " + indice + " " + Arrays.stream(lista).sum());
-                indice++;
-            }
-            System.out.println();
-        }*/
 
         double[][][] bigProbMatrix;
         bigProbMatrix = Matrix.createProbBig(p1, p2);
 
-        /*for (int i = 0; i < 7; i++) {
-            System.out.println("Estado " + (i - 3));
-            Matrix.printM(bigProbMatrix[i]);
-
-            for (int j = 0; j < 169; j++) {
-                double sum = Arrays.stream(bigProbMatrix[3][i]).sum();
-                System.out.println("Linha " + j + " = " + sum);
-            }
-        }*/
-
         double[][][] bigCustosMatrix;
         bigCustosMatrix = Matrix.createBigCustos(l1, l2, p1, p2);
-        //printCSV(bigCustosMatrix[6]);
 
-        /*for (int i = 0; i < 7; i++) {
-            System.out.println("Estado " + (i - 3));
-            Matrix.printM(bigCustosMatrix[i]);
-       }
-        Matrix.printM(bigCustosMatrix[0]);
-        */
-        //Par ( (Decisões,Fn) , Dn )  ;
         Par<Par <int[],double[]>, double[][]> sol =resolve_N_iteracao(bigProbMatrix,bigCustosMatrix,25);
-        //printCSV1(sol.getFirst().getFirst());
-        //printCSV(sol.getFirst().getSecond());
 
-
-
-    };
+        System.out.println("Decisões para a última iteração do vetor Fn:\n");
+        print_solucao(sol.getFirst().getSecond(),sol.getFirst().getFirst());
+        System.out.println("\n\nVetores DN para as N iterações:\n");
+        Matrix.printM(sol.getSecond());
+    }
 
     final int MAX = 13;
 
@@ -142,11 +102,11 @@ public class Main {
         return sum;
     }
 
-    //Serve para ca
+    //Serve para calcular o vetor Q
     public double[] calcula_Q(double[][]pn,double[][] rn){
         return Matrix.multiply_by_rows(pn,rn);
     }
-    //Calcula a Matriz Vn.
+    //Calcula um vetor Vn.
     public double[] calcula_Vn(double[]qn,double[] pn_fn_1){
         if(qn==null ||pn_fn_1==null )
             throw new RuntimeException("Null Vector ");
@@ -171,7 +131,6 @@ public class Main {
             if (vn[i]>maior){
                 maior=vn[i];
                 descisao=i-3;
-
             }
         }
         return new Par(descisao,maior);
@@ -204,39 +163,57 @@ public class Main {
         Par<int [],double []>  fn_ant=new Par(new double[169], new double[169]);// Fn anterior.
         double [][] dn =new double[iteracoes][169];//Vetor Dn para todas as Iterações.
 
-        int AUX=0;
         //Vetor Qn
         double [][] q=new double[7][169];
-        for(transf=-3;transf<4;transf++){
+        for(transf=-3;transf<4;transf++)
             q[transf+3] = calcula_Q( pn[transf+3],rn[transf+3]);
-        }
 
         //faz as n iteraçoes
         for(j=0;j<iteracoes;j++) {
             //Vetor Vn
             double vn[][] = new double[7][169];
-
             for (i = 0; i < 7; i++) {// Para todos as decisões alternativas, de uma iteração
                 double[] pn_fn = Matrix.multiply(pn[i], fn.getSecond());
                 vn[i] = calcula_Vn(q[i], pn_fn);
-
             }
             fn_ant=fn;
             fn = solução(vn);
-            //System.out.println("Interacao:"+AUX);
-            AUX++;
-
-            //printCSV(fn.getSecond());
-            printCSV1(fn.getFirst());
             //Calculo do Dn
-            for(i=0;i<169;i++){
+            for(i=0;i<169;i++)
                 dn[j][i] = fn.getSecond()[i] - fn_ant.getSecond()[i];
-            }
+
         }
         return new Par(fn,dn);
     }
 
-    //Print de Matrizes para csv de doubles.
+
+
+    public void print_solucao(double d[], int m[]){
+        StringBuilder sb = new StringBuilder();
+        for (int j = 0; j < m.length; j++) {
+            if(m[j]==-3){
+                sb.append(String.format("(%2d,%2d):\t Transferir 3 da Filial 1 para 2 \t\tLucro: %10.4f\n",(j/13),(j%13), d[j]));
+            }else if (m[j]==-2){
+                sb.append(String.format("(%2d,%2d):\t Transferir 2 da Filial 1 para 2 \t\tLucro: %10.4f\n",(j/13),(j%13), d[j]));
+            }else if(m[j]==-1){
+                sb.append(String.format("(%2d,%2d):\t Transferir 1 da Filial 1 para 2 \t\tLucro: %10.4f\n",(j/13),(j%13), d[j]));
+            }else if (m[j]==0){
+                sb.append(String.format("(%2d,%2d):\t Nao Transferir \t\t\t\t\t\tLucro: %10.4f\n",(j/13),(j%13), d[j]));
+            }else if(m[j]==1){
+                sb.append(String.format("(%2d,%2d):\t Transferir 1 da Filial 2 para 1 \t\tLucro: %10.4f\n",(j/13),(j%13), d[j]));
+            }else if (m[j]==2){
+                sb.append(String.format("(%2d,%2d):\t Transferir 2 da Filial 2 para 1 \t\tLucro: %10.4f\n",(j/13),(j%13), d[j]));
+            }else if(m[j]==3){
+                sb.append(String.format("(%2d,%2d):\t Transferir 3 da Filial 2 para 1 \t\tLucro: %10.4f\n",(j/13),(j%13), d[j]));
+            }
+        }
+        System.out.println(sb.toString());
+    }
+    /*
+    //Funções auxilares para colocar as matrizes em exel.
+
+
+    //Print de Matrizes de doubles para csv .
     public void printCSV(double [][] m){
         StringBuilder sb = new StringBuilder();
         sb.append("_;");
@@ -260,6 +237,7 @@ public class Main {
         System.out.println(sb.toString());
     }
 
+    //Print de um vetor de inteiros para csv
     public void printCSV1(int [] m){
         StringBuilder sb = new StringBuilder();
         for (int j = 0; j < m.length; j++) {
@@ -283,7 +261,7 @@ public class Main {
         }
         System.out.println(sb.toString());
     }
-    //Print de um Vetor para csv.
+    //Print de um vetor de doubles para csv.
     public void printCSV(double [] m){
         StringBuilder sb = new StringBuilder();
 
@@ -292,22 +270,7 @@ public class Main {
         }
         System.out.println(sb.toString());
     }
-
-    //Tranforma um vetore de 169 em uma matriz
-    public double [][] tranformVectorToMat(double v[]){
-        if (v==null)
-            throw new RuntimeException("Null Vector!");
-        double [][] mat=new double[13][13];
-        int i,j;
-
-        for(i=0;i<13;i++) {
-            for (j = 0; j < 13; j++) {
-                mat[i][j] = v[i * 13 + j];
-            }
-        }
-        return mat;
-    }
-
+    */
     public static void main(String[] args) {
         new Main();
     }

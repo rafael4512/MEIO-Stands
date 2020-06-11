@@ -1,0 +1,12 @@
+Grupo que inclui o Aluno com o Nº 86266
+MEIO-TP1 - Tabelas de probabilidades de pedidos e entregas de automóveis
+
+FILIAL 1
+Número de clientes:	  ;      0 ;      1 ;      2 ;      3 ;      4 ;      5 ;      6 ;      7 ;      8 ;      9 ;     10 ;     11 ;     12
+Probabilidade (pedidos):  ; 0.0272 ; 0.0944 ; 0.1552 ; 0.2092 ; 0.1932 ; 0.1476 ; 0.0864 ; 0.0528 ; 0.0208 ; 0.0088 ; 0.0032 ; 0.0012 ; 0.0000
+Probabilidade (entregas): ; 0.0404 ; 0.0676 ; 0.1024 ; 0.1392 ; 0.1396 ; 0.1236 ; 0.1012 ; 0.0896 ; 0.0740 ; 0.0572 ; 0.0388 ; 0.0220 ; 0.0044
+
+FILIAL 2
+Número de clientes:	  ;      0 ;      1 ;      2 ;      3 ;      4 ;      5 ;      6 ;      7 ;      8 ;      9 ;     10 ;     11 ;     12
+Probabilidade (pedidos):  ; 0.0292 ; 0.0724 ; 0.1168 ; 0.1488 ; 0.1452 ; 0.1116 ; 0.0968 ; 0.0824 ; 0.0736 ; 0.0508 ; 0.0376 ; 0.0268 ; 0.0080
+Probabilidade (entregas): ; 0.0280 ; 0.1024 ; 0.1848 ; 0.2216 ; 0.1964 ; 0.1324 ; 0.0740 ; 0.0360 ; 0.0144 ; 0.0064 ; 0.0016 ; 0.0008 ; 0.0012
